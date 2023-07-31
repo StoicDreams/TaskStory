@@ -1,0 +1,22 @@
+﻿@inherits BUICore
+
+@using StoicDreams.BlazorUI.Components.Displays
+
+<MudTooltip Text="Sponser us to help support development">
+	<MudIconButton Size="Size.Small" Color="Color.Inherit" Icon="@Icons.Material.TwoTone.AttachMoney" Href="https://github.com/sponsors/StoicDreams" Target="_blank" />
+</MudTooltip>
+<MudTooltip Text="Link to Stoic Dreams on Facebook" Placement="Placement.Left">
+	<MudIconButton Size="Size.Small" Color="Color.Inherit" Icon="@Icons.Custom.Brands.Facebook" Href="https://www.facebook.com/stoicdreams" Target="_blank" />
+</MudTooltip>
+<MudTooltip Text="Link to Stoic Dreams on Instagram" Placement="Placement.Left">
+	<MudIconButton Size="Size.Small" Color="Color.Inherit" Icon="@Icons.Custom.Brands.Instagram" Href="https://www.instagram.com/stoicdreamsllc" Target="_blank" />
+</MudTooltip>
+<BUITitleBarQuickLinks />
+
+<MudPaper Class="ml-1 mud-theme-transparent" Elevation="0">
+	@UserName
+</MudPaper>
+
+@code {
+	private string UserName => Auth.User.Name;
+}

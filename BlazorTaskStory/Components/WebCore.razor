@@ -1,0 +1,27 @@
+﻿@inherits BUICore
+@inject StaticData StaticDataCore
+@inject IStoicDreamsApi ApiCore
+@inject ITaggedItemValidation ValidateCore
+@inject IMarkdown MarkdownCore
+@inject IJsInterop JsInteropCore
+@inject IDialogService DialogCore
+@inject TagFilterService FilterCore
+
+@code {
+	protected StaticData StaticData => StaticDataCore;
+	protected IStoicDreamsApi Api => ApiCore;
+	protected ITaggedItemValidation Validate => ValidateCore;
+	protected IMarkdown Markdown => MarkdownCore;
+	protected IJsInterop JS => JsInteropCore;
+	protected IDialogService Dialog => DialogCore;
+	protected TagFilterService Filter => FilterCore;
+	protected Guid CurrentGroupId => GetSessionState<Guid>(StaticData.CurrentGroupIdKey, () => Guid.Empty).GetAwaiter().GetResult();
+	protected Group[] MyGroups => StaticData.GetMyGroups().GetAwaiter().GetResult();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+	}
+
+	protected ValueTask CopyToClipboard(string text) => JsInteropCore.CallMethod("navigator.clipboard.writeText", text);
+}

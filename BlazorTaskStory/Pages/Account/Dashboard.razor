@@ -1,0 +1,80 @@
+﻿@inherits BUIPage
+@page "/dashboard"
+@page "/account/dashboard"
+
+<TagFilterDisplay />
+
+<BUIPaper PaperType="PaperTypes.Wrap" Class="mt-n5 mb-5 pa-3 gap-3 align-center justify-center" Elevation="15">
+	<BUIPaper PaperType="PaperTypes.FlexRow" Elevation="0" Class="pa-1 align-center">
+		<MudTooltip Text="Use these buttons to toggle showing and hiding the labeled sections">
+			Manager Toggles:
+		</MudTooltip>
+	</BUIPaper>
+	<BUIButtonToggle @bind-Value="ShowTasks" Text="Tasks" SessionKey="DashboardShowTasks" />
+	<BUIButtonToggle @bind-Value="ShowSolutions" Text="Solutions" SessionKey="DashboardShowSolutions" />
+	<BUIButtonToggle @bind-Value="ShowProblems" Text="Problems" SessionKey="DashboardShowProblems" />
+	<BUIButtonToggle @bind-Value="ShowFeatures" Text="Features" SessionKey="DashboardShowFeatures" />
+	<BUIButtonToggle @bind-Value="ShowProjects" Text="Projects" SessionKey="DashboardShowProjects" />
+	<BUIButtonToggle @bind-Value="ShowMarkdown" Text="Markdown" SessionKey="DashboardShowMarkdown" />
+</BUIPaper>
+
+@if (!IsShowingAny)
+{
+	<BUIQuote Class="pa-2" Color="Color.Primary">
+		<BUIParagraph>
+			Welcome to your dashboard. Use the buttons above to toggle which sections you want to display here.
+		</BUIParagraph>
+	</BUIQuote>
+}
+
+@if (ShowTasks)
+{
+	<TaskManager />
+}
+
+@if (ShowSolutions)
+{
+	<SolutionManager />
+}
+
+@if (ShowProblems)
+{
+	<ProblemManager />
+}
+
+@if (ShowFeatures)
+{
+	<FeatureManager />
+}
+
+@if (ShowProjects)
+{
+	<ProjectManager />
+}
+
+@if (ShowMarkdown)
+{
+	<MarkdownGuide />
+}
+
+@code {
+	private bool ShowTasks { get; set; }
+	private bool ShowSolutions { get; set; }
+	private bool ShowProblems { get; set; }
+	private bool ShowFeatures { get; set; }
+	private bool ShowProjects { get; set; }
+	private bool ShowMarkdown { get; set; }
+	private bool IsShowingAny => ShowTasks || ShowSolutions || ShowProblems || ShowFeatures || ShowProjects;
+
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.Dashboard;
+		bool showTasks = await GetSessionState<bool>("DashboardShowTasks", () => false);
+		bool showSolutions = await GetSessionState<bool>("DashboardShowSolutions", () => false);
+		bool showProblems = await GetSessionState<bool>("DashboardShowProblems", () => false);
+		bool showFeatures = await GetSessionState<bool>("DashboardShowFeatures", () => false);
+		bool showProjects = await GetSessionState<bool>("DashboardShowProjects", () => false);
+		bool ShowMarkdown = await GetSessionState<bool>("DashboardShowMarkdown", () => false);
+		await base.OnInitializedAsync();
+	}
+}

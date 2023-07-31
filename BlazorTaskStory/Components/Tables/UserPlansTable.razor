@@ -1,0 +1,110 @@
+﻿
+<BUIStaticTable Items="SubscriptionPlans" Columns="SubPlanColums" />
+
+@code {
+	[Parameter]
+	public SubscriptionPlan[] SubscriptionPlans { get; set; } = Array.Empty<SubscriptionPlan>();
+	[Parameter]
+	public SubscriptionPlan SelectedPlan { get; set; } = null!;
+	[Parameter]
+	public Action<SubscriptionPlan>? HandleCheckChange { get; set; }
+
+	private List<TableColumn<SubscriptionPlan>> SubPlanColums => new()
+	{
+		new() { Title = "Select".ConvertToRenderFragment(), Cell = item => __builder =>
+		{			
+			<MudIconButton Icon="@(item.Key == SelectedPlan.Key ? Icons.Material.TwoTone.RadioButtonChecked : Icons.Material.TwoTone.RadioButtonUnchecked)"
+				Color="@(item.Key == SelectedPlan.Key ? Color.Success : Color.Default)"
+				OnClick="@(() => HandleCheckChange?.Invoke(item))" />
+		}},
+		new() { Title = "Plan Name".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			<MudButton OnClick="@(() => HandleCheckChange?.Invoke(item))">
+				@item.Name
+			</MudButton>
+		}},
+		new() { Title = "Details".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			<MudButton OnClick="@(() => HandleCheckChange?.Invoke(item))">
+				@item.Description
+			</MudButton>
+		}},
+		new() { Title = "Status".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@item.Status
+		}},
+		new() { Title = "Monthly Fee".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@if (item.MonthlyChargePerUser > 0)
+			{
+				@item.MonthlyChargePerUser.ToString("C2") <text> per user</text>
+			}
+			else
+			{
+				@item.MonthlyCharge.ToString("C2")
+			}
+		}},
+		new() { Title = "Users / Seats".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@if (item.TeamSize > 0)
+			{
+				@item.TeamSize.ToString("N0")
+			}
+			else
+			{
+				<text>No Limit</text>
+			}
+		}},
+		new() { Title = "Projects".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@if (item.Projects > 0)
+			{
+				@item.Projects.ToString("N0")
+			}
+			else
+			{
+				<text>No Limit</text>
+			}
+		}},
+		new() { Title = "Problems Per User".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@if (item.Problems > 0)
+			{
+				@item.Problems.ToString("N0")
+			}
+			else
+			{
+				<text>No Limit</text>
+			}
+		}},
+		new() { Title = "Solutions per Problem".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@if (item.SolutionsPerProblem > 0)
+			{
+				@item.SolutionsPerProblem.ToString("N0")
+			}
+			else
+			{
+				<text>No Limit</text>
+			}
+		}},
+		new() { Title = "Tasks per User".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@if (item.TasksPerUser > 0)
+			{
+				@item.TasksPerUser.ToString("N0")
+			}
+			else
+			{
+				<text>No Limit</text>
+			}
+		}},
+		new() { Title = __builder =>
+		{
+			<MudTooltip Text="Days stories are retained before being automatically deleted.">Story Retention</MudTooltip>
+		}, Cell = item => __builder =>
+		{
+			@item.StoryRetentionDays.ToString("N0") <text> Days</text>
+		}},
+	};
+}

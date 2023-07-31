@@ -1,0 +1,31 @@
+﻿{
+	"commands": {
+		"BuildSitemap": {
+			"fileName": "PowerShell.exe",
+			"workingDirectory": ".",
+			"arguments": ".\\PowerShell\\BuildSitemap.ps1"
+		},
+		"BuildFontAwesome": {
+			"fileName": "PowerShell.exe",
+			"workingDirectory": ".",
+			"arguments": ".\\PowerShell\\BuildFontAwesome.ps1"
+		},
+		"PrepLocalDebug": {
+			"fileName": "PowerShell.exe",
+			"workingDirectory": ".",
+			"arguments": ".\\PowerShell\\PrepLocalDebug.ps1"
+		},
+		"CleanLocalDebug": {
+			"fileName": "PowerShell.exe",
+			"workingDirectory": ".",
+			"arguments": ".\\PowerShell\\CleanLocalDebug.ps1"
+		}
+	},
+	"-vs-binding": {
+		"BeforeBuild": [
+			"BuildSitemap"
+		],
+		"AfterBuild": [
+		]
+	}
+}

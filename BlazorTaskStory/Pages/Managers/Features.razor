@@ -1,0 +1,16 @@
+﻿@inherits BUIPage
+@page "/features"
+
+<TagFilterDisplay />
+
+<FeatureManager />
+
+<MarkdownGuide />
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.FeatureManager;
+		await base.OnInitializedAsync();
+	}
+}

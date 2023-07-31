@@ -1,0 +1,179 @@
+﻿@inherits WebCore
+
+<BUITitledSection TitleTheme="Color.Info" Class="mt-3 mb-4" ContentClass="ml-n4 mr-n2" TitleClass="ml-n2 mr-n1 mr-0 mt-n2 d-flex flex-wrap align-center">
+	<TitleContent>
+		<BUIPaper PaperType="PaperTypes.Wrap" Elevation="0" Class="mud-theme-transparent align-center gap-3 flex-grow-1 mud-full-width">
+			<MudText Typo="Typo.h6">Tag Filters </MudText>
+			<BUIPaper PaperType="PaperTypes.FlexRow" Elevation="0" Class="flex-grow-1 align-center justify-center gap-5 mud-theme-transparent">
+				<text>Bug / Blocked Toggles: </text>
+				<MudTooltip Text="Toggle bug tag filter">
+					<MudToggleIconButton Title="Bug" @bind-Toggled="BugToggle" Icon="@Icons.Material.TwoTone.BugReport" ToggledIcon="@Icons.Material.TwoTone.BugReport" Variant="Variant.Filled" Size="Size.Large" ToggledSize="Size.Large" Color="Color.Dark" ToggledColor="Color.Error" Class="" />
+				</MudTooltip>
+				<MudTooltip Text="Toggle blocked tag filter">
+					<MudToggleIconButton Title="Blocked" @bind-Toggled="BlockerToggle" Icon="@Icons.Material.TwoTone.Block" ToggledIcon="@Icons.Material.TwoTone.Block" Variant="Variant.Filled" Size="Size.Large" ToggledSize="Size.Large" Color="Color.Dark" ToggledColor="Color.Error" Class="" />
+				</MudTooltip>
+			</BUIPaper>
+		</BUIPaper>
+	</TitleContent>
+	<ChildContent>
+		<TagGuide />
+		<BUIPaper PaperType="PaperTypes.FlexColumn" MaxWidth="" Elevation="15" Class="mud-width-full mud-theme-dark mt-n2 mb-3">
+			<BUIPaper PaperType="PaperTypes.Wrap" Elevation="0" Class="mud-width-full mud-theme-transparent pa-1 align-center gap-3">
+
+				<MudPaper MaxWidth="320px" Elevation="0" Class="@InputPaperClass">
+					<MudTextField Class="@TagFilterTextFieldClass" Label="Custom Tags" @bind-Value="Filter.NewValue" MaxLength="Filter.TagMaxLength" TextChanged="Filter.NewTagUpdated" HelperText="Type in name of tag and press enter to add" />
+				</MudPaper>
+				<MudSpacer />
+				<MudTooltip Text="Quick Filters allow you to populate tag toggles based on search criteria. Leave empty to not show Quick Links.">
+					<MudIcon Icon="@Icons.Material.TwoTone.Help" Color="Color.Info" />
+				</MudTooltip>
+				<MudPaper MaxWidth="@InputQuickLinkWidth" Elevation="0" Class="@InputPaperClass">
+					<MudTextField Class="@TagFilterTextFieldClass" Label="" @bind-Value="TeamFilter" MaxLength="Filter.TagMaxLength" TextChanged="TeamFilterUpdated" HelperText="Team Quick Filter" />
+				</MudPaper>
+				<MudPaper MaxWidth="@InputQuickLinkWidth" Elevation="0" Class="@InputPaperClass">
+					<MudTextField Class="@TagFilterTextFieldClass" Label="" @bind-Value="ProjectFilter" MaxLength="Filter.TagMaxLength" TextChanged="ProjectFilterUpdated" HelperText="Project Quick Filter" />
+				</MudPaper>
+				<MudPaper MaxWidth="@InputQuickLinkWidth" Elevation="0" Class="@InputPaperClass">
+					<MudTextField Class="@TagFilterTextFieldClass" Label="" @bind-Value="ProblemFilter" MaxLength="Filter.TagMaxLength" TextChanged="ProblemFilterUpdated" HelperText="Problem Quick Filter" />
+				</MudPaper>
+				<MudPaper MaxWidth="@InputQuickLinkWidth" Elevation="0" Class="@InputPaperClass">
+					<MudTextField Class="@TagFilterTextFieldClass" Label="" @bind-Value="SolutionFilter" MaxLength="Filter.TagMaxLength" TextChanged="SolutionFilterUpdated" HelperText="Solution Quick Filter" />
+				</MudPaper>
+				<MudPaper MaxWidth="@InputQuickLinkWidth" Elevation="0" Class="@InputPaperClass">
+					<MudTextField Class="@TagFilterTextFieldClass" Label="" @bind-Value="FeatureFilter" MaxLength="Filter.TagMaxLength" TextChanged="FeatureFilterUpdated" HelperText="Feature Quick Filter" />
+				</MudPaper>
+				<MudPaper MaxWidth="@InputQuickLinkWidth" Elevation="0" Class="@InputPaperClass">
+					<MudTextField Class="@TagFilterTextFieldClass" Label="" @bind-Value="PeopleFilter" MaxLength="Filter.TagMaxLength" TextChanged="PeopleFilterUpdated" HelperText="People Quick Filter" />
+				</MudPaper>
+			</BUIPaper>
+			<BUIPaper PaperType="PaperTypes.Wrap" Elevation="0" Class="mud-width-full mud-theme-transparent pa-1">
+				<MudSpacer />
+				<span class="ma-2">Quick Tag Toggles: </span>
+				@foreach (string tag in GetQuickLinks)
+				{
+					<MudChip OnClick="() => Filter.ToggleTag(tag)" Color="Filter.FilterChipColor(tag)">@tag</MudChip>
+				}
+			</BUIPaper>
+		</BUIPaper>
+		<BUIInputChips Items="Filter.Tags"
+			ColorFilter="Filter.FilterChipColor"
+			Class="gap-2"
+			NewTagInput="Filter.SetNewTagHandler"
+			PaperType="PaperTypes.Wrap"
+			ItemFilter="Validate.FilterTagName"
+			MaxLength="Filter.TagMaxLength"
+			OnChange="Filter.SetTags"
+			/>
+	</ChildContent>
+</BUITitledSection>
+
+@code {
+	private bool ResetValueOnEmptyText { get; set; } = false;
+	private bool CoerceText { get; set; } = false;
+	private bool CoerceValue { get; set; } = false;
+	private const string InputPaperClass = "mud-theme-transparent d-inline-block ml-auto";
+	private const string InputQuickLinkWidth = "150px";
+	private const string TagFilterTextFieldClass = "mt-n5";
+
+	private string TeamFilter { get; set; } = string.Empty;
+	private string ProjectFilter { get; set; } = string.Empty;
+	private string ProblemFilter { get; set; } = string.Empty;
+	private string SolutionFilter { get; set; } = string.Empty;
+	private string FeatureFilter { get; set; } = string.Empty;
+	private string PeopleFilter { get; set; } = string.Empty;
+
+	private List<string> GetTags
+	{
+		get
+		{
+			return Filter.Tags;
+		}
+	}
+
+	private List<string> GetQuickLinks
+	{
+		get
+		{
+			List<string> list = new();
+			ApplyTags(list, Filter.Teams, TeamFilter, true);
+			ApplyTags(list, Filter.Projects, ProjectFilter, true);
+			ApplyTags(list, Filter.Problems, ProblemFilter, false);
+			ApplyTags(list, Filter.Solutions, SolutionFilter, false);
+			ApplyTags(list, Filter.Features, FeatureFilter, false);
+			ApplyTags(list, Filter.People, PeopleFilter, false);
+			return list;
+		}
+	}
+
+	private void ApplyTags(List<string> list, List<string> tagList, string filter, bool defaultAllIfEmpty)
+	{
+		if (!defaultAllIfEmpty && string.IsNullOrWhiteSpace(filter)) { return; }
+		if (string.IsNullOrWhiteSpace(filter))
+		{
+			list.AddRange(tagList);
+			return;
+		}
+		list.AddRange(tagList.Where(x => x.Contains(filter)));
+	}
+
+	private bool BugToggle { get => Filter.Tags.Contains("bug"); set => UpdateToggleTag(value, "bug"); }
+	private bool BlockerToggle { get => Filter.Tags.Contains("blocked"); set => UpdateToggleTag(value, "blocked"); }
+
+	private void UpdateToggleTag(bool enabled, string tag)
+	{
+		if (enabled)
+		{
+			Filter.AddTag(tag);
+			return;
+		}
+		Filter.RemoveTag(tag);
+	}
+
+	private void ToggleTag(string tag)
+	{
+		Filter.ToggleTag(tag);
+	}
+
+	private Guid ForSessionWatching { get; set; }
+	protected override async Task OnInitializedAsync()
+	{
+		ForSessionWatching = await GetSessionState<Guid>(StaticData.CurrentGroupIdKey, () => Guid.Empty);
+		TeamFilter = await GetSessionState<string>(nameof(TeamFilter), () => string.Empty);
+		ProjectFilter = await GetSessionState<string>(nameof(ProjectFilter), () => string.Empty);
+		ProblemFilter = await GetSessionState<string>(nameof(ProblemFilter), () => string.Empty);
+		SolutionFilter = await GetSessionState<string>(nameof(SolutionFilter), () => string.Empty);
+		FeatureFilter = await GetSessionState<string>(nameof(FeatureFilter), () => string.Empty);
+		PeopleFilter = await GetSessionState<string>(nameof(PeopleFilter), () => string.Empty);
+		await base.OnInitializedAsync();
+	}
+
+	protected override ValueTask OnSessionStateUpdate()
+	{
+		StateHasChanged();
+		return base.OnSessionStateUpdate();
+	}
+
+	private Task<List<string>> SearchList(List<string> list, string value)
+	{
+		if (string.IsNullOrWhiteSpace(value)) return Task.FromResult(list);
+		return Task.FromResult(list.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList());
+	}
+
+	private Task TeamFilterUpdated(string value) => ApplyFilterUpdate(nameof(TeamFilter), value);
+
+	private Task ProjectFilterUpdated(string value) => ApplyFilterUpdate(nameof(ProjectFilter), value);
+
+	private Task ProblemFilterUpdated(string value) => ApplyFilterUpdate(nameof(ProblemFilter), value);
+
+	private Task SolutionFilterUpdated(string value) => ApplyFilterUpdate(nameof(SolutionFilter), value);
+
+	private Task FeatureFilterUpdated(string value) => ApplyFilterUpdate(nameof(FeatureFilter), value);
+
+	private Task PeopleFilterUpdated(string value) => ApplyFilterUpdate(nameof(PeopleFilter), value);
+
+	private async Task ApplyFilterUpdate(string sessionKey, string value)
+	{
+		value = value.Trim();
+		await SetSessionStateWithTrigger(sessionKey, value);
+	}
+}

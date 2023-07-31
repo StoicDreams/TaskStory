@@ -1,0 +1,80 @@
+﻿@inherits WebCore
+
+<TaggedItemManager TItem="FeatureDetail" DisplayName="Feature" TagNamePrefix="feature:"
+				   UseGroupId="true"
+				   DataType="Feature"
+				   OnValidate="ValidateSave"
+				   OnUnload="HandleUnload">
+	<DisplayContent>
+		<MudTabs Elevation="15" Rounded="true" Class="" Color="Color.Primary" Border="true">
+			<MudTabPanel Text="Summary">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Summarize feature details here. Flesh out more details in the Who, What, Where, When, Why and How tabs.
+				</BUIQuote>
+				<SideBySide Name="Summary" NowShowing="context.NowShowing" @bind-Value="context.Item.Summary" OnRender="() => context.Item.Summary" />
+			</MudTabPanel>
+			<MudTabPanel Text="Who">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Who will benefit from this feature?
+				</BUIQuote>
+				<SideBySide Name="Who" NowShowing="context.NowShowing" @bind-Value="context.Item.Who" OnRender="() => context.Item.Who" />
+			</MudTabPanel>
+			<MudTabPanel Text="What">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					What is this feature?
+				</BUIQuote>
+				<SideBySide Name="What" NowShowing="context.NowShowing" @bind-Value="context.Item.What" OnRender="() => context.Item.What" />
+			</MudTabPanel>
+			<MudTabPanel Text="Where">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Where is this feature used?
+				</BUIQuote>
+				<SideBySide Name="Where" NowShowing="context.NowShowing" @bind-Value="context.Item.Where" OnRender="() => context.Item.Where" />
+			</MudTabPanel>
+			<MudTabPanel Text="When">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					When is this feature used? When is it needed?
+				</BUIQuote>
+				<SideBySide Name="When" NowShowing="context.NowShowing" @bind-Value="context.Item.When" OnRender="() => context.Item.When" />
+			</MudTabPanel>
+			<MudTabPanel Text="Why">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Why is there a need for this feature? Why will people use this feature?
+				</BUIQuote>
+				<SideBySide Name="Why" NowShowing="context.NowShowing" @bind-Value="context.Item.Why" OnRender="() => context.Item.Why" />
+			</MudTabPanel>
+			<MudTabPanel Text="How">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					How will users discover the feature? How will it be used?
+				</BUIQuote>
+				<SideBySide Name="How" NowShowing="context.NowShowing" @bind-Value="context.Item.How" OnRender="() => context.Item.How" Pla />
+			</MudTabPanel>
+		</MudTabs>
+	</DisplayContent>
+</TaggedItemManager>
+
+@code {
+	private TResult ValidateSave(FeatureDetail item)
+	{
+		Validate.AddOwnerIfNone(item.Tags);
+		if (!Validate.HasContent(item.Who)) item.Who = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.What)) item.What = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Where)) item.Where = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.When)) item.When = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Why)) item.Why = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.How)) item.How = Validate.DefaultToDoContent;
+		return TResult.Success("Feature can be saved");
+	}
+
+	private void HandleUnload(FeatureDetail item, FeatureDetail cache)
+	{
+		item.Summary = cache.Summary;
+		item.Who = cache.Who;
+		item.What = cache.What;
+		item.Where = cache.Where;
+		item.When = cache.When;
+		item.Why = cache.Why;
+		item.How = cache.How;
+		item.Owner = cache.Owner;
+	}
+}

@@ -1,0 +1,18 @@
+﻿@inject StaticData Data
+
+@if (Data.PlanAlerts.Length > 0)
+{
+	<BUIQuote Cite="The Task Story Team" Color="Color.Info" Class="@Class">
+		@foreach (string alert in Data.PlanAlerts)
+		{
+			<BUIParagraph>
+				@alert
+			</BUIParagraph>
+		}
+	</BUIQuote>
+}
+
+@code {
+	[Parameter]
+	public string Class { get; set; } = "mb-3";
+}

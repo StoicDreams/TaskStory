@@ -1,0 +1,12 @@
+﻿@inherits BUICore
+
+@if (ShowContent)
+{
+	<BUIQuote Color="Color.Success" Class="pa-4 mt-1 mb-4">
+		Get started by <BUILink Href="/signup">signing up for your free Stoic Dreams account</BUILink> to try Task Story for yourself.
+	</BUIQuote>
+}
+
+@code {
+	private bool ShowContent => !Auth.IsLoggedIn;
+}

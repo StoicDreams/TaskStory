@@ -1,0 +1,16 @@
+﻿@inherits BUIPage
+@page "/projects"
+
+<TagFilterDisplay />
+
+<ProjectManager />
+
+<MarkdownGuide />
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.ProjectManager;
+		await base.OnInitializedAsync();
+	}
+}

@@ -1,0 +1,250 @@
+﻿@using System.Text
+@inherits WebCore
+
+<BUIDialogConfirm OnSave="HandleSave" OnCancel="HandleCancel" ConfirmText="Publish" ConfirmIcon="@Icons.Material.TwoTone.Publish" >
+	@if (IsProcessing)
+	{
+		<BUIPaper PaperType="PaperTypes.FlexColumn" Class="justify-center align-center">
+			<MudProgressCircular Size="Size.Large" Color="Color.Primary" Indeterminate="true" />
+			<BUIPaper Elevation="0">@ProcessingProgress</BUIPaper>
+		</BUIPaper>
+	}
+	else
+	{
+		<BUIPaper PaperType="PaperTypes.FlexColumn" Class="justify-center">
+			<BUISectionTitle Class="mud-theme-secondary">
+				Problem
+			</BUISectionTitle>
+			<BUIPaper PaperType="PaperTypes.FlexColumn" Class="ml-auto mr-auto" MaxWidth="max-content">
+				@Markdown.GetMarkup(Problem.GetMarkdown)
+			</BUIPaper>
+
+			<BUISectionTitle Class="mud-theme-secondary">
+				Solutions
+			</BUISectionTitle>
+			<BUIPaper PaperType="PaperTypes.FlexColumn" Class="" Elevation="0">
+				@if (IsLoadingSolutions)
+				{
+					<BUIProgressBar />
+				}
+				else
+				{
+					<BUIPaper PaperType="PaperTypes.None" Elevation="0" Class="list-view-grid ml-auto mr-auto" MaxWidth="max-content">
+						@foreach (SolutionDraft solution in Solutions)
+						{
+							<BUIPaper PaperType="PaperTypes.None" Class="pa-3 d-flex align-center" Elevation="0">
+								<BUIButtonToggle Value="IsImplemented(solution.Id)" ValueChanged="value=>ToggleImplemented(solution.Id, !value)" IconOff="@ToggleOff" IconOn="@ToggleOn" ColorOff="Color.Error" Text="@(IsImplemented(solution.Id) ? "Implemented" : "Dropped")" />
+							</BUIPaper>
+							<BUIPaper PaperType="PaperTypes.FlexColumn" Class="pa-3 ml-auto mr-auto" MaxWidth="max-content" Elevation="15">
+								@Markdown.GetMarkup(solution.GetMarkdown)
+							</BUIPaper>
+						}
+					</BUIPaper>
+				}
+			</BUIPaper>
+
+			<BUISectionTitle Class="mud-theme-secondary">
+				Preview
+			</BUISectionTitle>
+			<BUIPaper PaperType="PaperTypes.None" Class="mt-3 pa-3" Elevation="0">
+				<BUIPaper PaperType="PaperTypes.None" Class="pa-3 mt-3 ml-auto mr-auto" MaxWidth="max-content">
+					@FinalPreview
+				</BUIPaper>
+			</BUIPaper>
+
+			<BUIPaper PaperType="PaperTypes.Wrap" Class="mt-3 pa-3" Elevation="0">
+				<MudAlert Severity="Severity.Warning">
+					Make sure all content in the preview is correct and all solution work is either completed or dropped. Clicking Publish below will create the story and delete this Problem and all associated Solutions. This action cannot be undone.
+				</MudAlert>
+			</BUIPaper>
+		</BUIPaper>
+	}
+</BUIDialogConfirm>
+
+@code {
+	[Parameter]
+	public ProblemDeclaration Problem { get; set; } = null!;
+
+	private StoryDetail Story { get; } = new();
+	private List<SolutionDraft> Solutions { get; set; } = new();
+
+	private string Name { get; set; } = string.Empty;
+	private Dictionary<Guid, bool> MapImplemented { get; } = new();
+	private bool IsLoadingSolutions { get; set; } = true;
+	private bool IsProcessing { get; set; }
+	private string ProcessingProgress { get; set; } = string.Empty;
+
+	private string ToggleOff => Icons.Material.TwoTone.DoNotDisturbOn;
+	private string ToggleOn => Icons.Material.TwoTone.CheckCircle;
+
+	private bool IsImplemented(Guid id) => MapImplemented.ContainsKey(id);
+	private void ToggleImplemented(Guid id, bool value)
+	{
+		if (value)
+		{
+			if (!MapImplemented.ContainsKey(id)) return;
+			MapImplemented.Remove(id);
+			return;
+		}
+		MapImplemented[id] = true;
+	}
+
+	private MarkupString FinalPreview
+	{
+		get
+		{
+			List<string> listImplemented = Solutions.Where((x) => IsImplemented(x.Id)).Select(s => s.GetMarkdown).ToList();
+			List<string> listNotImplemented = Solutions.Where((x) => !IsImplemented(x.Id)).Select(s => s.GetMarkdown).ToList();
+			StringBuilder sbImplemented = new();
+			StringBuilder sbNotImplemented = new();
+			foreach (string markdown in listImplemented)
+			{
+				sbImplemented.AppendLine(markdown);
+			}
+			foreach (string markdown in listNotImplemented)
+			{
+				sbNotImplemented.AppendLine(markdown);
+			}
+			Story.IntegratedSolutions = sbImplemented.ToString();
+			Story.DroppedSolutions = sbNotImplemented.ToString();
+			return Markdown.GetMarkup(Story.GetMarkdown);
+		}
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		Story.Id = Guid.NewGuid();
+		Story.Name = Problem.Name;
+		Story.Problem = Problem.GetMarkdown;
+		Story.PublishedOwner = Validate.MyTag;
+		await LoadSolutions();
+		await base.OnInitializedAsync();
+	}
+
+	private async ValueTask LoadSolutions()
+	{
+		string myTag = Validate.CreateTagFromName(Problem.Name, "problem:");
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = "Solution",
+				GroupId = CurrentGroupId,
+				Data = (new List<string>(){myTag}).ConvertToWebEncryptedString()
+			};
+		TResult<string[]> tItems = await Api.PostJsonAsync<string[], ApiDataTransfer>("Items", dataTransfer);
+		Dictionary<string, bool> mapTags = new();
+		foreach (string tag in Problem.Tags)
+		{
+			mapTags[tag] = true;
+		}
+		if (tItems.IsOkay)
+		{
+			string error = string.Empty;
+			foreach (string data in tItems.Result)
+			{
+				try
+				{
+					SolutionDraft? item = data.ConvertFromWebEncryptedString<SolutionDraft>();
+					if (item == null) { continue; }
+					Solutions.Add(item);
+					MapImplemented[item.Id] = true;
+					foreach (string tag in item.Tags)
+					{
+						if (mapTags.ContainsKey(tag)) continue;
+						mapTags[tag] = true;
+					}
+				}
+				catch (Exception ex)
+				{
+					error = ex.Message;
+				}
+			}
+			if (error != string.Empty)
+			{
+				Snackbar.Add(error, Severity.Error);
+			}
+		}
+		Story.Tags = mapTags.Keys.ToList();
+		IsLoadingSolutions = false;
+		StateHasChanged();
+	}
+
+	private async Task HandleSave()
+	{
+		if (IsProcessing) return;
+		IsProcessing = true;
+		ProcessingProgress = "Saving Story...";
+		StateHasChanged();
+		if (!(await SaveStory())) return;
+		ProcessingProgress = "Story Saved. Deleting Problem items...";
+		BackgroundCleanup();
+		await DeleteStoryItems();
+		Snackbar.Add("Story created", Severity.Success);
+		Filter.TriggerRefresh();
+	}
+
+	private async void BackgroundCleanup()
+	{
+		await SaveItemTags(Story);
+	}
+
+	private async Task HandleCancel()
+	{
+		if (IsProcessing) return;
+		await Task.CompletedTask;
+	}
+
+	private async ValueTask<bool> SaveStory()
+	{
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = "Story",
+				GroupId = CurrentGroupId,
+				Data = Story.ConvertToWebEncryptedString()
+			};
+		TResult tGuid = await Api.PostJsonAsync<Guid, ApiDataTransfer>($"Item/{Story.Id}", dataTransfer);
+		if (!tGuid.IsOkay)
+		{
+			Snackbar.Add(FirstNotEmpty(tGuid.Message, $"An unknown error occurred saving new Story."), Severity.Error);
+			IsProcessing = false;
+			StateHasChanged();
+			return false;
+		}
+		await SaveItemTags(Story);
+		return true;
+	}
+	private async ValueTask SaveItemTags(StoryDetail item)
+	{
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = "Story",
+				GroupId = CurrentGroupId,
+				Data = item.Tags.ConvertToWebEncryptedString()
+			};
+		TResult tResult = await Api.PostJsonAsync<Guid, ApiDataTransfer>($"Tags/{item.Id}", dataTransfer);
+	}
+	private async ValueTask DeleteStoryItems()
+	{
+		await DeleteItem("Problem", Problem.Id, Problem.Name);
+		foreach (SolutionDraft solution in Solutions)
+		{
+			await DeleteItem("Solution", solution.Id, solution.Name);
+		}
+	}
+
+	private async ValueTask DeleteItem(string dataType, Guid id, string name)
+	{
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = dataType,
+				GroupId = CurrentGroupId,
+				Data = TResult<Guid>.Success(id).ConvertToWebEncryptedString()
+			};
+		TResult tResult = await Api.PostJsonAsync<Guid, ApiDataTransfer>($"Item/Delete", dataTransfer);
+		if (!tResult.IsOkay)
+		{
+			StateHasChanged();
+			Snackbar.Add(FirstNotEmpty(tResult.Message, $"An unknown error occurred deleting solution {name}."), Severity.Error);
+			return;
+		}
+	}
+}

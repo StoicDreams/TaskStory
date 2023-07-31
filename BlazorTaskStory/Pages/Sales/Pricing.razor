@@ -1,0 +1,21 @@
+﻿@inherits BUIPage
+@page "/pricing"
+
+<GuestPlansTable />
+
+@code {
+
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.PlansAndPricing;
+		if (Auth.IsLoggedIn)
+		{
+			ContinueButton = ("", "");
+		}
+		else
+		{
+			ContinueButton = ("/signup", "Sign-up for your Free account to get started.");
+		}
+		await base.OnInitializedAsync();
+	}
+}

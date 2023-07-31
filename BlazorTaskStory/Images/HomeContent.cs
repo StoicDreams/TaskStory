@@ -1,0 +1,44 @@
+﻿namespace StoicDreams.WebApp.Images;
+public static class HomeContent
+{
+	private const string ImageRoot = ImageCommon.SnapRoot;
+	public const string AccountPortal = $"{ImageRoot}homecontent-account-portal.png";
+	public const string AppSettings = $"{ImageRoot}homecontent-app-settings.png";
+	public const string ContentPanel = $"{ImageRoot}homecontent-content-panel.png";
+	public const string Dashboard = $"{ImageRoot}homecontent-dashboard.png";
+	public const string DashboardManagerToggles = $"{ImageRoot}homecontent-dashboard-manager-toggles.png";
+	public const string DocTagging = $"{ImageRoot}homecontent-doc-tagging.png";
+	public const string FeedbackButton = $"{ImageRoot}homecontent-feedback-button.png";
+	public const string FeedbackForm = $"{ImageRoot}homecontent-feedback-form.png";
+	public const string LightMode = $"{ImageRoot}homecontent-lightmode.png";
+	public const string SubscriptionPlans = $"{ImageRoot}homecontent-mysub-plans.png";
+	public const string NavMinified = $"{ImageRoot}homecontent-nav-minified.png";
+	public const string ProblemHow = $"{ImageRoot}homecontent-problem-how.png";
+	public const string ProblemSummary = $"{ImageRoot}homecontent-problem-summary.png";
+	public const string ProblemWhat = $"{ImageRoot}homecontent-problem-what.png";
+	public const string ProblemWhen = $"{ImageRoot}homecontent-problem-when.png";
+	public const string ProblemWhere = $"{ImageRoot}homecontent-problem-where.png";
+	public const string ProblemWho = $"{ImageRoot}homecontent-problem-who.png";
+	public const string ProblemWhy = $"{ImageRoot}homecontent-problem-why.png";
+	public const string ProjectHowNew = $"{ImageRoot}homecontent-project-how-new.png";
+	public const string ProjectSummaryNew = $"{ImageRoot}homecontent-project-summary-new.png";
+	public const string ProjectWhatNew = $"{ImageRoot}homecontent-project-what-new.png";
+	public const string ProjectWhenNew = $"{ImageRoot}homecontent-project-when-new.png";
+	public const string ProjectWhereNew = $"{ImageRoot}homecontent-project-where-new.png";
+	public const string ProjectWhoNew = $"{ImageRoot}homecontent-project-who-new.png";
+	public const string ProjectWhyNew = $"{ImageRoot}homecontent-project-why-new.png";
+	public const string AccountPortalToggle = $"{ImageRoot}homecontent-right-drawer-toggle.png";
+	public const string Seats = $"{ImageRoot}homecontent-seats.png";
+	public const string SettingsToggle = $"{ImageRoot}homecontent-settings-toggle.png";
+	public const string SolutionInvestigation = $"{ImageRoot}homecontent-solution-investigation.png";
+	public const string SolutionNotes = $"{ImageRoot}homecontent-solution-notes.png";
+	public const string SolutionSummary = $"{ImageRoot}homecontent-solution-summary.png";
+	public const string SolutionSummaryEdit = $"{ImageRoot}homecontent-solution-summary-edit.png";
+	public const string SolutionTesting = $"{ImageRoot}homecontent-solution-testing.png";
+	public const string StoriesProjectManager = $"{ImageRoot}homecontent-stories-pm.png";
+	public const string TagFilters = $"{ImageRoot}homecontent-tag-filters.png";
+	public const string TaskNew = $"{ImageRoot}homecontent-task-new.png";
+	public const string TeamSelection = $"{ImageRoot}homecontent-team-selection.png";
+	public const string ThemeCustumization = $"{ImageRoot}homecontent-theme-customization.png";
+	public const string StripPaymentTest = $"{ImageRoot}Stripe Payment Test.png";
+}

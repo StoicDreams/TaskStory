@@ -1,0 +1,46 @@
+﻿@inherits WebCore
+
+<TaggedItemManager TItem="StoryDetail" DisplayName="Story" TagNamePrefix=""
+				UseGroupId="true"
+				DataType="Story"
+				OnValidate="ValidateSave"
+				OnUnload="HandleUnload"
+				IsReadOnly="true">
+	<DisplayContent>
+		<BUITitledSection Title="Problem">
+			<BUIPaper PaperType="PaperTypes.FlexColumn" MaxWidth="max-content" Class="ml-auto mr-auto">
+				@Markdown.GetMarkup(context.Item.Problem)
+			</BUIPaper>
+		</BUITitledSection>
+		<BUITitledSection Title="Integrated Solutions">
+			<BUIPaper PaperType="PaperTypes.FlexColumn" MaxWidth="max-content" Class="ml-auto mr-auto">
+				@Markdown.GetMarkup(context.Item.IntegratedSolutions)
+			</BUIPaper>
+		</BUITitledSection>
+		<BUITitledSection Title="Dropped Solutions">
+			<BUIPaper PaperType="PaperTypes.FlexColumn" MaxWidth="max-content" Class="ml-auto mr-auto">
+				@Markdown.GetMarkup(context.Item.DroppedSolutions)
+			</BUIPaper>
+		</BUITitledSection>
+	</DisplayContent>
+</TaggedItemManager>
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+	}
+
+	private TResult ValidateSave(StoryDetail item)
+	{
+		return TResult.Exception("Stories cannot be saved after publishing.");
+	}
+
+	private void HandleUnload(StoryDetail item, StoryDetail cache)
+	{
+		item.PublishedOwner = cache.PublishedOwner;
+		item.Problem = cache.Problem;
+		item.IntegratedSolutions = cache.IntegratedSolutions;
+		item.DroppedSolutions = cache.DroppedSolutions;
+	}
+}

@@ -1,0 +1,99 @@
+﻿@inherits WebCore
+
+<TaggedItemManager TItem="ProblemDeclaration" DisplayName="Problem" TagNamePrefix="problem:"
+				UseGroupId="true"
+				DataType="Problem"
+				OnValidate="ValidateSave"
+				CustomButtons="CustomButtons"
+				RestrictTagPrefixes="@(new[] {"person:"})"
+				OnUnload="HandleUnload">
+	<DisplayContent>
+		<MudTabs Elevation="15" Rounded="true" Class="" Color="Color.Primary" Border="true">
+			<MudTabPanel Text="Summary">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Provide a brief summary of the problem. Flesh out more details in the Who, What, Where, When, Why and How tabs.
+				</BUIQuote>
+				<SideBySide Name="Summary" NowShowing="context.NowShowing" @bind-Value="context.Item.Summary" OnRender="() => context.Item.Summary" />
+			</MudTabPanel>
+			<MudTabPanel Text="Who">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Who is having this problem?
+				</BUIQuote>
+				<SideBySide Name="Who" NowShowing="context.NowShowing" @bind-Value="context.Item.Who" OnRender="() => context.Item.Who" />
+			</MudTabPanel>
+			<MudTabPanel Text="What">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					What is the problem?
+				</BUIQuote>
+				<SideBySide Name="What" NowShowing="context.NowShowing" @bind-Value="context.Item.What" OnRender="() => context.Item.What" />
+			</MudTabPanel>
+			<MudTabPanel Text="Where">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Where is this problem occurring?
+				</BUIQuote>
+				<SideBySide Name="Where" NowShowing="context.NowShowing" @bind-Value="context.Item.Where" OnRender="() => context.Item.Where" />
+			</MudTabPanel>
+			<MudTabPanel Text="When">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					When does this problem occur?
+				</BUIQuote>
+				<SideBySide Name="When" NowShowing="context.NowShowing" @bind-Value="context.Item.When" OnRender="() => context.Item.When" />
+			</MudTabPanel>
+			<MudTabPanel Text="Why">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Why is this a problem?
+				</BUIQuote>
+				<SideBySide Name="Why" NowShowing="context.NowShowing" @bind-Value="context.Item.Why" OnRender="() => context.Item.Why" />
+			</MudTabPanel>
+			<MudTabPanel Text="How">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					How can this problem be replicated?
+				</BUIQuote>
+				<SideBySide Name="How" NowShowing="context.NowShowing" @bind-Value="context.Item.How" OnRender="() => context.Item.How" />
+			</MudTabPanel>
+		</MudTabs>
+	</DisplayContent>
+</TaggedItemManager>
+
+@code {
+	private TResult ValidateSave(ProblemDeclaration item)
+	{
+		if (!Validate.PersonIsOwner(item.Tags)) return TResult.Exception("Problems can only be saved by the owner. Delete the current owner if you want to make yourself owner to make changes.");
+		if (!Validate.HasContent(item.Summary)) item.Summary = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Who)) item.Who = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.What)) item.What = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Where)) item.Where = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.When)) item.When = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Why)) item.Why = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.How)) item.How = Validate.DefaultToDoContent;
+		return TResult.Success("Problem can be saved");
+	}
+
+	private void HandleUnload(ProblemDeclaration item, ProblemDeclaration cache)
+	{
+		item.Summary = cache.Summary;
+		item.Who = cache.Who;
+		item.What = cache.What;
+		item.Where = cache.Where;
+		item.When = cache.When;
+		item.Why = cache.Why;
+		item.How = cache.How;
+		item.Owner = cache.Owner;
+	}
+
+	private RenderFragment CustomButtons(ProblemDeclaration problem) => __builder =>
+	{
+		<MudButton Variant="Variant.Filled" Color="Color.Tertiary" EndIcon="@Icons.Material.TwoTone.Publish" OnClick="() => OpenPublisher(problem)">Publish</MudButton>
+	};
+
+	private void OpenPublisher(ProblemDeclaration problem)
+	{
+		DialogOptions options = new()
+		{
+			FullScreen = false
+		};
+		DialogParameters dp = new();
+		dp.Add("Problem", problem);
+		Dialog.Show<StoryPublisher>("Story Publisher", dp, options);
+	}
+}

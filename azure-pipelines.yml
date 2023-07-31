@@ -1,0 +1,209 @@
+# ASP.NET Core
+
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- main
+
+variables:
+  buildConfiguration: 'Release'
+  appName: 'webapp'
+
+stages:
+- stage: Alpha
+  jobs:
+  - job: CICD
+    displayName: 'Build, Test, and Deploy Website'
+    workspace:
+      clean: outputs | resources | all
+    pool: Default
+    #  vmImage: 'windows-latest'
+    steps:
+      - task: PowerShell@2
+        displayName: 'Set Build Target'
+        inputs:
+          targetType: 'inline'
+          script: |
+            pwsh --version
+            $env:Path
+            rustc --version
+            rustup target add wasm32-unknown-unknown
+      - task: PowerShell@2
+        displayName: 'Run Tests'
+        inputs:
+          targetType: 'inline'
+          script: |
+            $test_results = cargo test --release | Out-String
+
+            if ($test_results.Contains("test result: FAILED")) {
+              throw "Tests Failed"
+            }
+      - task: PowerShell@2
+        displayName: 'Install Trunk'
+        inputs:
+          targetType: 'inline'
+          script: |
+            cargo install trunk
+      - task: PowerShell@2
+        displayName: 'Install Post Build'
+        inputs:
+          targetType: 'inline'
+          script: |
+            cargo install webapp_post_build --git https://github.com/StoicDreams/RustWebUI
+      - task: PowerShell@2
+        displayName: 'Build Web App'
+        inputs:
+          targetType: 'inline'
+          script: |
+            # Change directory to project folder
+            cd $(appName)
+
+            # Build
+            trunk build --release
+      - task: AzureCLI@2
+        displayName: 'Remove Old Files'
+        inputs:
+          azureSubscription: '$(azureSubscription)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: 'az storage blob delete-batch -s ''$web'' --account-name $(accountName)'
+      - task: AzureCLI@2
+        displayName: 'Copy Files to Azure Blob Storage'
+        inputs:
+          azureSubscription: '$(azureSubscription)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            $Container = '$web'
+            az storage copy -s '$(System.DefaultWorkingDirectory)/$(appName)/dist/*' --destination-account-name $(accountName) --destination-container $Container --recursive
+      - task: AzureCLI@2
+        displayName: 'Set Correct Content-Type Attributes'
+        inputs:
+          azureSubscription: '$(azureSubscription)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            $myloc = "$((Get-Location).ProviderPath)\$(appName)\dist\"
+            Get-ChildItem "$(appName)/dist" -Filter "*.wasm" -Recurse -Force | ForEach-Object {
+                $rel_Path = $_.FullName.Replace($myloc, "")
+                az storage blob update -c '$web' -n $rel_Path --account-name $(accountName) --content-type application/wasm
+            }
+      - task: AzureCLI@2
+        displayName: 'Purge Storage Cache'
+        inputs:
+          azureSubscription: $(azureConnection)
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: 'az cdn endpoint purge -g $(resourceGroup) -n $(accountName) --profile-name $(profileName) --content-paths ''/*'''
+
+  - job: BuildLegacyNet
+    condition: eq('true','false')
+    displayName: 'Build and Deploy Website'
+    workspace:
+      clean: outputs | resources | all
+    pool: Default
+    #  vmImage: 'windows-latest'
+    variables:
+      buildConfiguration: 'Release'
+    steps:
+      - task: UseDotNet@2
+        displayName: 'Install .NET 7.x SDK'
+        inputs:
+          packageType: 'sdk'
+          version: '7.x'
+          includePreviewVersions: true
+      - task: DotNetCoreCLI@2
+        displayName: 'Restore Solution'
+        inputs:
+          command: 'restore'
+          projects: '**/*.sln'
+          includeNuGetOrg: true
+      - task: DotNetCoreCLI@2
+        displayName: 'Build Projects'
+        inputs:
+          command: 'build'
+          arguments: '--configuration $(buildConfiguration)'
+          projects: '**/*.csproj'
+      - task: VisualStudioTestPlatformInstaller@1
+        displayName: 'Install Visual Studio Test Platform'
+      - task: DotNetCoreCLI@2
+        displayName: 'Run Build Tests'
+        inputs:
+          command: 'test'
+          projects: '**/**.BuildTests.csproj'
+          arguments: '--configuration $(buildConfiguration) --no-restore --collect: "XPlat Code Coverage"'
+          publishTestResults: true,
+          nobuild: true
+      - script: "dotnet tool update --global dotnet-reportgenerator-globaltool"
+        displayName: "Install ReportGenerator tool"
+      - script: 'reportgenerator -reports:**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/coverlet/reports -reporttypes:"Cobertura"'
+        displayName: "Create reports"
+      - task: PublishCodeCoverageResults@1
+        displayName: "Publish code coverage report"
+        inputs:
+          codeCoverageTool: "Cobertura"
+          summaryFileLocation: "$(Build.SourcesDirectory)/coverlet/reports/Cobertura.xml"
+      - task: DotNetCoreCLI@2
+        displayName: 'Publish Website'
+        inputs:
+          command: 'publish'
+          arguments: '--configuration $(buildConfiguration) --no-restore --no-build --self-contained true /p:LinkDuringPublish=true'
+          publishWebProjects: true
+          zipAfterPublish: false
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(appName)'
+      - task: PowerShell@2
+        displayName: 'Update Index.html file'
+        inputs:
+          filePath: '$(appName)\PowerShell\UpdateIndexHtml.ps1'
+      - task: PowerShell@2
+        displayName: 'Fix Service Worker Assets'
+        inputs:
+          filePath: '$(appName)\PowerShell\FixServiceWorkerAssets.ps1'
+#      - task: PublishBuildArtifacts@1
+#        displayName: 'Publish Artifacts'
+#        inputs:
+#          PathtoPublish: '$(System.DefaultWorkingDirectory)/$(appName)/bin/Release/net7.0/publish/wwwroot'
+#          ArtifactName: 'drop'
+#          publishLocation: 'Container'
+      # DEPLOYMENT
+      - task: AzureCLI@2
+        displayName: 'Remove Old Files'
+        inputs:
+          azureSubscription: '$(azureSubscription)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: 'az storage blob delete-batch -s ''$web'' --account-name $(accountName)'
+      - task: AzureCLI@2
+        displayName: 'Copy Files to Azure Blob Storage'
+        inputs:
+          azureSubscription: '$(azureSubscription)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            $Container = '$web'
+            az storage copy -s '$(System.DefaultWorkingDirectory)/$(appName)/bin/Release/net7.0/publish/wwwroot/*' --destination-account-name $(accountName) --destination-container $Container --recursive
+      - task: AzureCLI@2
+        displayName: 'Set Correct Content-Type Attributes'
+        inputs:
+          azureSubscription: '$(azureSubscription)'
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            $myloc = "$((Get-Location).ProviderPath)\$(appName)\bin\Release\net7.0\publish\wwwroot"
+            Get-ChildItem "$(appName)\bin\Release\net7.0\publish\wwwroot" -Filter "*.wasm" -Recurse -Force | ForEach-Object {
+                $rel_Path = $_.FullName.Replace($myloc, "").Replace("\","/")
+                if ($rel_Path[0] -eq '/') {
+                    $rel_Path = $rel_Path.Substring(1)
+                }
+                Write-Host "Updating Blob File: $($rel_Path)"
+                az storage blob update -c '$web' -n $rel_Path --account-name $(accountName) --content-type application/wasm
+            }
+      - task: AzureCLI@2
+        displayName: 'Purge Storage Cache'
+        inputs:
+          azureSubscription: $(azureConnection)
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: 'az cdn endpoint purge -g $(resourceGroup) -n $(accountName) --profile-name $(profileName) --content-paths ''/*'''

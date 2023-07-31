@@ -1,0 +1,13 @@
+﻿@inherits BUIPage
+@page "/docs/projects"
+
+<DocProjects />
+
+@code {
+	protected override Task OnInitializedAsync()
+	{
+		Title = PageTitles.DocProjects;
+		ContinueButton = ("/docs/features", PageTitles.DocFeatures);
+		return base.OnInitializedAsync();
+	}
+}

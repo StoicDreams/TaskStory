@@ -1,0 +1,81 @@
+﻿@inherits WebCore
+
+<TaggedItemManager TItem="ProjectDetail" DisplayName="Project" TagNamePrefix="project:"
+				   UseGroupId="true"
+				   DataType="Project"
+				   OnValidate="ValidateSave"
+				   RestrictTagPrefixes="@(new[] {"person:"})"
+				   OnUnload="HandleUnload">
+	<DisplayContent>
+		<MudTabs Elevation="15" Rounded="true" Class="" Color="Color.Primary" Border="true">
+			<MudTabPanel Text="Summary">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Summarize project details here. Flesh out more details in the Who, What, Where, When, Why and How tabs.
+				</BUIQuote>
+				<SideBySide Name="Summary" NowShowing="context.NowShowing" @bind-Value="context.Item.Summary" OnRender="() => context.Item.Summary" />
+			</MudTabPanel>
+			<MudTabPanel Text="Who">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Who will benefit from this project?
+				</BUIQuote>
+				<SideBySide Name="Who" NowShowing="context.NowShowing" @bind-Value="context.Item.Who" OnRender="() => context.Item.Who" />
+			</MudTabPanel>
+			<MudTabPanel Text="What">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					What is this project? What is the product it represents?
+				</BUIQuote>
+				<SideBySide Name="What" NowShowing="context.NowShowing" @bind-Value="context.Item.What" OnRender="() => context.Item.What" />
+			</MudTabPanel>
+			<MudTabPanel Text="Where">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Where is the product used?
+				</BUIQuote>
+				<SideBySide Name="Where" NowShowing="context.NowShowing" @bind-Value="context.Item.Where" OnRender="() => context.Item.Where" />
+			</MudTabPanel>
+			<MudTabPanel Text="When">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					When is the product used? When is it needed?
+				</BUIQuote>
+				<SideBySide Name="When" NowShowing="context.NowShowing" @bind-Value="context.Item.When" OnRender="() => context.Item.When" />
+			</MudTabPanel>
+			<MudTabPanel Text="Why">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Why is there a need for this project? Why will people use this product?
+				</BUIQuote>
+				<SideBySide Name="Why" NowShowing="context.NowShowing" @bind-Value="context.Item.Why" OnRender="() => context.Item.Why" />
+			</MudTabPanel>
+			<MudTabPanel Text="How">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					How will users discover the product? How will it be used?
+				</BUIQuote>
+				<SideBySide Name="How" NowShowing="context.NowShowing" @bind-Value="context.Item.How" OnRender="() => context.Item.How" />
+			</MudTabPanel>
+		</MudTabs>
+	</DisplayContent>
+</TaggedItemManager>
+
+@code {
+	private TResult ValidateSave(ProjectDetail item)
+	{
+		Validate.AddOwnerIfNone(item.Tags);
+		if (!Validate.HasContent(item.Who)) item.Who = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.What)) item.What = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Where)) item.Where = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.When)) item.When = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Why)) item.Why = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.How)) item.How = Validate.DefaultToDoContent;
+		return TResult.Success("Project can be saved");
+	}
+
+	private void HandleUnload(ProjectDetail item, ProjectDetail cache)
+	{
+		item.Summary = cache.Summary;
+		item.Who = cache.Who;
+		item.What = cache.What;
+		item.Where = cache.Where;
+		item.When = cache.When;
+		item.Why = cache.Why;
+		item.How = cache.How;
+		item.Owner = cache.Owner;
+	}
+}

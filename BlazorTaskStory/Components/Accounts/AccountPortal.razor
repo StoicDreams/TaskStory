@@ -1,0 +1,90 @@
+﻿@inherits WebCore
+
+<BUIDrawerHeader>
+	Account Portal
+</BUIDrawerHeader>
+
+<BUIPaper Class="pa-1" Elevation="0">
+	<BUIParagraph>
+		Current Team
+	</BUIParagraph>
+	<BUIPaper PaperType="PaperTypes.None" Elevation="0">
+		@if (IsInitializing)
+		{
+			<BUIProgressBar />
+		}
+		else if (MyGroups.Length > 1)
+		{
+			<MudSelect T="Guid" Value="CurrentGroupId" ValueChanged="UpdateGroup">
+				@foreach (Group group in MyGroups)
+				{
+					<MudSelectItem Value="group.GroupId">@group.Name</MudSelectItem>
+				}
+			</MudSelect>
+		}
+		else if (MyGroups.Length == 1)
+		{
+			<BUIQuote Color="Color.Primary" Class="pa-3">
+				@MyGroups[0].Name
+			</BUIQuote>
+		}
+		else
+		{
+			<BUIQuote Color="Color.Error">None</BUIQuote>
+		}
+	</BUIPaper>
+
+	<MudDivider Class="mt-2 mb-2" DividerType="DividerType.FullWidth" />
+	<MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true" Size="Size.Small" OnClick="SignOut">Sign-Out</MudButton>
+</BUIPaper>
+
+@code {
+	private SubscriptionStatus SubStatus { get; set; } = new();
+	private bool IsInitializing { get; set; } = true;
+
+	protected override async Task OnInitializedAsync()
+	{
+		IsInitializing = false;
+		await base.OnInitializedAsync();
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await AssureCurrentGroupIdIsValid();
+		await base.OnAfterRenderAsync(firstRender);
+	}
+
+	private async Task SignOut()
+	{
+		TResult result = await Auth.LogOut();
+		SetAppStateWithTrigger(AppStateDataTags.TitleBarRightDrawerOpen, false);
+		await Storage.SetValue(AppStateDataTags.StoragePermission.AsName(), StoragePermissions.None);
+		Snackbar.Add(result.Message, result.Status switch
+		{
+			TResultStatus.Success => Severity.Success,
+			_ => Severity.Error
+		});
+		NavManager.NavigateTo("/");
+		AppState.SetData(AppStateDataTags.TitleBarRightDrawerIcon, Icons.Material.TwoTone.Login);
+		AppState.SetData(AppStateDataTags.TitleBarRightDrawerTitle, "Sign-In");
+		AppState.SetData(AppStateDataTags.TitleBarLeftDrawerTitle, "Toggle Navigation Menu");
+	}
+
+	private async ValueTask AssureCurrentGroupIdIsValid()
+	{
+		if (MyGroups.Length == 0)
+		{
+			await UpdateGroup(Guid.Empty);
+			return;
+		}
+		if (MyGroups.Where(x => x.GroupId == CurrentGroupId).Any()) return;
+		await UpdateGroup(MyGroups[0].GroupId);
+	}
+
+	protected async Task UpdateGroup(Guid groupId)
+	{
+		if (CurrentGroupId == groupId) return;
+		Console.WriteLine($"UpdateGroup:{groupId}");
+		await SetSessionStateWithTrigger(StaticData.CurrentGroupIdKey, groupId);
+	}
+}

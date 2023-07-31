@@ -1,0 +1,350 @@
+﻿@inherits BUIPage
+@page "/account/subscription"
+@inject StaticData StaticData
+@inject IStoicDreamsApi Api
+
+<PlanAlerts />
+
+<BUIStandardSection>
+
+	@if (IsLoading)
+	{
+		<BUIProgressBar />
+	}
+	else
+	{
+		@if (MyStatus.CurrentKey != string.Empty)
+		{
+			<BUIQuote Color="(MyPlanIsActive ? MyStatus.RenewalEnabled ? Color.Success : Color.Warning : Color.Error)" Class="d-flex flex-wrap mt-3">
+				<BUIParagraph>
+					You are currently subscribed to @MyPlan.Name which is
+					@if (!MyStatus.IsActive)
+					{
+						<text> currently pending payment.</text>
+					}
+					else if (MyStatus.CurrentExpiration < DateTime.UtcNow)
+					{
+						<text> currently expired. Please renew to continue with this plan or switch to the Single Developer Free plan to confirm cancelling your current plan.</text>
+					}
+					else
+					{
+						@if (MyStatus.RenewalEnabled)
+						{
+							<text>set for auto-renewal on @MyStatus.CurrentExpiration.ToShortDateString().</text>
+						}
+						else
+						{
+							<text>set to expire on @MyStatus.CurrentExpiration.ToShortDateString().</text>
+						}
+					}
+				</BUIParagraph>
+				<MudSpacer />
+				<BUIButtonLink Class="mt-2 mb-2" Href="https://billing.stripe.com/login/7sI2aH43z3pX7g4144" Tooltip="Access your subscription and payment details in the Stoic Dreams Stripe Portal">Stripe Portal</BUIButtonLink>
+			</BUIQuote>
+
+			@if (MyPlan.MonthlyChargePerUser > 0)
+			{
+				<BUIQuote Color="Color.Info" Class="mt-3">
+					Based on your current seat usage of @MyStatus.CurrentSeats.ToString("N0") seats, you have currently accrued @CurrentCharges of pending charges for seat usage in this billing cycle. This amount is only for estimation purposes, and does not account for potential additional seat usage between now and the end of the billing period, nor factor in any prorated charges or credits, nor does it include any taxes or fees that may be charged on your final invoice. See full details in your <BUILink Href="https://billing.stripe.com/login/7sI2aH43z3pX7g4144">billing.stripe.com</BUILink> account.
+				</BUIQuote>
+			}
+		}
+		@if (!SubscriptionChangeIsPending && MyPlanKey != SelectedPlan.Key && SelectedPlan.MonthlyChargePerUser == 0 && MyPlan.MonthlyChargePerUser > 0)
+		{
+			<BUIQuote Color="Color.Warning" Class="flex-grow-1">
+				Warning: Reverting from a Team subscription plan to a Single developer plan will result in all team data being deleted when new subscription goes into effect.
+			</BUIQuote>
+		}
+		<BUIPaper PaperType="PaperTypes.Wrap" Class="mt-3 mb-3 pa-2 align-center gap-4" Elevation="15">
+			<BUIPaper PaperType="PaperTypes.None" MaxWidth="500px" Elevation="0">
+				<MudTextField @bind-Value="SubscriptionName" MaxLength="100" Label="Company | Team" HelperText="Name used for this subscription, visible to Seat members" />
+			</BUIPaper>
+			<BUIPaper PaperType="PaperTypes.Wrap | PaperTypes.JustifyEnd" Elevation="0" Class="flex-grow-1">
+				@if (SubscriptionChangeIsPending)
+				{
+					<MudAlert Severity="Severity.Warning">
+						Your subscription change is currently pending confirmation.
+					</MudAlert>
+				}
+				else if (MyPlanKey != SelectedPlan.Key)
+				{
+					<MudAlert Severity="Severity.Warning">
+						You have selected to change your plan to @(SelectedPlan.Name). Confirming this change will
+						@if (MyPlanKey == string.Empty)
+						{
+							<text> send you an invoice to start your new subscription.</text>
+						}
+						else if (SelectedPlan.Key == string.Empty)
+						{
+							<text> cancel your current subscription.</text>
+						}
+						else
+						{
+							<text> cancel your current subscription and send you an invoice to start your new subscription.</text>
+						}
+					</MudAlert>
+					<MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.TwoTone.ArrowForward" Color="Color.Success" OnClick="() => HandleConfirmSubChange()">
+						@if (MyPlanKey == string.Empty)
+						{
+							<text>Purchase @SelectedPlan.Name</text>
+						}
+						else if (!IsUpgrade(MyPlan, SelectedPlan))
+						{
+							<text>Downgrade to @SelectedPlan.Name</text>
+						}
+						else
+						{
+							<text>Upgrade to @SelectedPlan.Name</text>
+						}
+					</MudButton>
+				}
+				else
+				{
+					<MudTooltip Text="Save subscription name">
+						<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" EndIcon="@Icons.Material.TwoTone.Save" OnClick="SaveSubscriptionName">Save</MudButton>
+					</MudTooltip>
+				}
+			</BUIPaper>
+		</BUIPaper>
+		@if (!string.IsNullOrWhiteSpace(PlanError))
+		{
+			<MudAlert Severity="Severity.Error" Class="mb-3" Dense="true">
+				@PlanError
+			</MudAlert>
+		}
+		<UserPlansTable SubscriptionPlans="SubscriptionPlans"
+					SelectedPlan="SelectedPlan"
+					HandleCheckChange="HandleCheckChange"
+					/>
+	}
+</BUIStandardSection>
+
+<BUIQuote Color="Color.Info" Class="mt-3">
+	We are not currently enforcing any limits on total data consumption. We reserve the right to alter plans and pricing at any time, including setting data consumption limits for plans, if we deem it necessary to do so.
+</BUIQuote>
+
+<BUIQuote Color="Color.Info" Class="mt-3">
+	In Team plans, seats are charged based on active usage per month. Users are considered active if they access the site while logged in at least once during the billing cycle.
+</BUIQuote>
+
+@if (MyPlan.MonthlyChargePerUser > 0)
+{	
+	<BUITitledSection Title="Add Seat" Class="mt-3">
+		<BUIPaper PaperType="PaperTypes.Wrap" Class="gap-3 align-center">
+			<MudTextField MaxLength="50" InputType="InputType.Text" Label="Name"
+					  HelperText="Name of user this seat belongs to."
+					  @bind-Value="NewSeat.Name"
+					  Error="@(!string.IsNullOrWhiteSpace(NewSeatNameError))"
+					  ErrorText="@NewSeatNameError" />
+			<MudTextField MaxLength="300" InputType="InputType.Email" Label="Email"
+					  HelperText="Email of user this seat belongs to. Must match email user uses for Stoic Dreams account."
+					  @bind-Value="NewSeat.Email"
+					  Error="@(!string.IsNullOrWhiteSpace(NewSeatEmailError))"
+					  ErrorText="@NewSeatEmailError" />
+			<MudTooltip Text="Add Seat" Class="">
+				<MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewSeat" EndIcon="@Icons.Material.TwoTone.Add">Add Seat</MudButton>
+			</MudTooltip>
+			<MudSpacer />
+		</BUIPaper>
+	</BUITitledSection>
+
+	<UserSeatsTable CurrentSeats="CurrentSeats" RemoveSeat="RemoveSeat" />
+}
+
+@code {
+	private string SubscriptionName { get => MyStatus.Name; set => MyStatus.Name = value; }
+	private SubscriptionPlan[] SubscriptionPlans { get; set; } = Array.Empty<SubscriptionPlan>();
+	private string MyPlanKey => MyPlan.Key;
+	private SubscriptionStatus MyStatus => StaticData.GetSubscriptionStatus().GetAwaiter().GetResult();
+	private SubscriptionPlan SelectedPlan { get; set; } = new();
+	private SubscriptionPlan MyPlan { get; set; } = new();
+	private SubscriptionPlan NextPlan { get; set; } = new();
+	private List<SubscriberSeat> CurrentSeats { get; set; } = new();
+	private SubscriberSeat NewSeat { get; set; } = new();
+	private string PlanError { get; set; } = string.Empty;
+	private string NewSeatNameError { get; set; } = string.Empty;
+	private string NewSeatEmailError { get; set; } = string.Empty;
+	private bool IsLoading { get; set; }
+	private bool MyPlanIsActive => MyStatus.CurrentKey == string.Empty || (MyStatus.CurrentExpiration > DateTime.UtcNow && MyStatus.IsActive);
+	private string CurrentCharges => $"${(MyPlan.MonthlyChargePerUser > 0 ? MyPlan.MonthlyChargePerUser * MyStatus.CurrentSeats : MyPlan.MonthlyCharge ).ToString("N2")}";
+	private bool SubscriptionChangeIsPending { get => GetSessionState<bool>(nameof(SubscriptionChangeIsPending), () => false).GetAwaiter().GetResult(); set => SetSessionState(nameof(SubscriptionChangeIsPending), value); }
+
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.SubscriptionManager;
+		await FetchMyData();
+		if (SubscriptionChangeIsPending)
+		{
+			_ = WatchForSubscriptionUpdate();
+		}
+		await base.OnInitializedAsync();
+	}
+
+	private async ValueTask FetchMyData()
+	{
+		IsLoading = true;
+		StateHasChanged();
+		await LoadMyStatus();
+		SubscriptionPlans = await StaticData.GetSubscriptions();
+		foreach (SubscriptionPlan plan in SubscriptionPlans)
+		{
+			if (plan.Key != MyStatus.CurrentKey) { continue; }
+			SelectedPlan = plan;
+			MyPlan = plan;
+		}
+		await LoadSeats();
+		IsLoading = false;
+		StateHasChanged();
+	}
+
+	private async ValueTask LoadMyStatus()
+	{
+		await StaticData.GetSubscriptionStatus(true);
+		StateHasChanged();
+	}
+
+	private void HandleCheckChange(SubscriptionPlan checkPlan)
+	{
+		SelectedPlan = checkPlan;
+		StateHasChanged();
+	}
+
+	private async Task HandleConfirmSubChange()
+	{
+		SubscriptionChangeIsPending = true;
+		NextPlan = SelectedPlan;
+		TResult tResult = await Api.PostJsonAsync<ApiDataTransfer>("Subscription/Change", StaticData.GetDefaultPostData("SubscriptionPlan", SelectedPlan.Key));
+		if (!tResult.IsOkay)
+		{
+			SubscriptionChangeIsPending = false;
+			Snackbar.Add(FirstNotEmpty(tResult.Message, "An unexpected error occurred"), Severity.Error);
+			return;
+		}
+		StateHasChanged();
+		_ = WatchForSubscriptionUpdate();
+	}
+
+	private async Task SaveSubscriptionName()
+	{
+		if (!SubscriptionNameIsValid()) return;
+		TResult tResult = await Api.PostJsonAsync<ApiDataTransfer>("Subscription/Status", StaticData.GetDefaultPostData("SubscriptionStatus", MyStatus.ConvertToWebEncryptedString()));
+		if (!tResult.IsOkay)
+		{
+			Snackbar.Add(FirstNotEmpty(tResult.Message, "An unexpected error occurred"), Severity.Error);
+			return;
+		}
+		Snackbar.Add(FirstNotEmpty(tResult.Message, "Successfully saved subscription name."), Severity.Success);
+		await StaticData.GetSubscriptionStatus(true);
+		StateHasChanged();
+	}
+
+	private bool SubscriptionNameIsValid()
+	{
+		PlanError = "";
+		if (string.IsNullOrWhiteSpace(MyStatus.Name))
+		{
+			PlanError = "Please enter a name for your subscription (Company | Team).";
+			StateHasChanged();
+			return false;
+		}
+		return true;
+	}
+
+	private bool IsWatching { get; set; }
+	private bool StopWatching { get; set; }
+	private async Task WatchForSubscriptionUpdate()
+	{
+		if (IsWatching) { return; }
+		IsWatching = true;
+		while (!StopWatching)
+		{
+			await Task.Delay(5000);
+			await LoadMyStatus();
+			if (MyPlanIsActive)
+			{
+				StopWatching = true;
+				SubscriptionChangeIsPending = false;
+			}
+		}
+		MyPlan = NextPlan;
+		Snackbar.Add($"Your plan has successfully been updated to {MyPlan.Name}", Severity.Success);
+		if (MyPlan.MonthlyChargePerUser > 0)
+		{
+			await LoadSeats();
+		}
+		StopWatching = false;
+		IsWatching = false;
+		StateHasChanged();
+	}
+
+	private async Task LoadSeats()
+	{
+		TResult<List<SubscriberSeat>> tResult = await Api.PostJsonAsync<List<SubscriberSeat>, ApiDataTransfer>("Subscription/Seats", StaticData.GetDefaultPostData("Seats", SelectedPlan.Key));
+		if (!tResult.IsOkay){ return; }
+		CurrentSeats = tResult.Result;
+		StateHasChanged();
+	}
+
+	private async Task SaveSeats()
+	{
+		TResult<List<SubscriberSeat>> tResult = await Api.PutJsonAsync<List<SubscriberSeat>, ApiDataTransfer>("Subscription/Seats", ApiDataTransfer.Create(StaticData.AppName, CurrentSeats.ConvertToWebEncryptedString()));
+		if (!tResult.IsOkay) { return; }
+		StateHasChanged();
+	}
+
+	private async Task AddNewSeat()
+	{
+		NewSeatEmailError = string.Empty;
+		NewSeatNameError = string.Empty;
+		if (string.IsNullOrWhiteSpace(NewSeat.Name))
+		{
+			NewSeatNameError = "Please enter a name for this seat.";
+			StateHasChanged();
+			return;
+		}
+
+		if (string.IsNullOrWhiteSpace(NewSeat.Email))
+		{
+			NewSeatEmailError = "An email is required.";
+			StateHasChanged();
+			return;
+		}
+
+		if (!Auth.EmailIsValid(NewSeat.Email, out string errorMessage))
+		{
+			NewSeatEmailError = errorMessage;
+			StateHasChanged();
+			return;
+		}
+		NewSeat.IsRemoveable = true;
+		CurrentSeats.Add(NewSeat);
+		NewSeat = new()
+		{
+			IsRemoveable = true
+		};
+		await SaveSeats();
+		StateHasChanged();
+	}
+
+	private async Task RemoveSeat(SubscriberSeat seat)
+	{
+		CurrentSeats.Remove(seat);
+		await SaveSeats();
+		StateHasChanged();
+	}
+
+	private static bool IsUpgrade(SubscriptionPlan subFrom, SubscriptionPlan subTo)
+	{
+		if (subTo.Key == string.Empty) { return false; }
+		if (subTo.MonthlyChargePerUser > subFrom.MonthlyChargePerUser) { return true; }
+		if (subTo.MonthlyChargePerUser < subFrom.MonthlyChargePerUser) { return false; }
+		if (subTo.MonthlyCharge > subFrom.MonthlyCharge) { return true; }
+		return false;
+	}
+
+	public override void Dispose()
+	{
+		StopWatching = true;
+		base.Dispose();
+	}
+}

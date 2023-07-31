@@ -1,0 +1,120 @@
+﻿@inherits BUIPage
+@page "/home"
+@page "/agile-project-management"
+@inject StaticData StaticData
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnCenterCenter" RightClass="@Flex.ColumnLeftCenter"
+	Title="Welcome to Task Story, your Project Manager for Continuous Agile Development!">
+	<LeftContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.ProblemAndRootCauseAnalysisResearchAndLeadership" Alt="@(nameof(SVG.Vecteezy.ProblemAndRootCauseAnalysisResearchAndLeadership))" />
+	</LeftContent>
+	<RightContent>
+		<BUIParagraph>
+			How long does it take for your development teams to develop and deliver new products or features to your customers?
+		</BUIParagraph>
+		<BUIParagraph>
+			Have you ever wondered why some teams can develop and release entire products in as little as a few weeks, while your team is taking several weeks to months to roll out just a few features?
+		</BUIParagraph>
+		<BUIParagraph>
+			The answer may surprise you.
+		</BUIParagraph>
+	</RightContent>
+</BUISideBySide>
+
+<BUISideBySide Elevation="@BUIStyles.ElevationFlat" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnCenterCenter" RightClass="@Flex.ColumnCenterCenter"
+	Title="">
+	<LeftContent>
+		<BUIParagraph>
+			Good project workflows are the key!
+		</BUIParagraph>
+	</LeftContent>
+	<RightContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.TimeManagementTimeTrackingToolManagementSoftware" Alt="@(nameof(SVG.Vecteezy.TimeManagementTimeTrackingToolManagementSoftware))" />
+	</RightContent>
+</BUISideBySide>
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassDarkSection" LeftClass="@Flex.ColumnCenterCenter" RightClass="@Flex.ColumnLeftCenter"
+			   Title="">
+	<LeftContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.BusinessTeamDiscussingProjectEmployeesArguingWith" Alt="@(nameof(SVG.Vecteezy.BusinessTeamDiscussingProjectEmployeesArguingWith))" />
+	</LeftContent>
+	<RightContent>
+		<BUIParagraph>
+			Teams that deliver quality software quickly with frequent feature updates are not doing so because they have the smartest people or the best software engineers or development teams.
+		</BUIParagraph>
+		<BUIParagraph>
+			They do not produce products and features in magically short development cycles because they are taking shortcuts, or excluding important concepts like security or testing.
+		</BUIParagraph>
+		<BUIParagraph>
+			No, these teams can do what they do because they figured out the keys to time managment, automation, and iterative delivery to their customers.
+		</BUIParagraph>
+	</RightContent>
+</BUISideBySide>
+
+
+<BUISideBySide Elevation="@BUIStyles.ElevationFlat" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnLeftCenter" RightClass="@Flex.ColumnCenterCenter"
+			   Title="">
+	<LeftContent>
+		<BUIParagraph>
+			Task Story is much more than a project management tool. Continuous agile development is built into our DNA. 
+		</BUIParagraph>
+
+		<BUIParagraph>
+			Using our continuous agile development methodologies we built and launched Task Story with a basic task manager system in place within a few days of inception. Then we delivered within 2 weeks integrated features for managing Projects, Problems, Solutions, Tasks, and more.
+		</BUIParagraph>
+
+		<BUIParagraph>
+			And we have made it our mission to help teams like yours to unlock their full potential by providing the keys to using our development processes, along with tools like Task Story to make these processes even easier.
+		</BUIParagraph>
+		@if (!Auth.IsLoggedIn)
+		{
+			<BUIQuote Color="Color.Success">
+				<BUILink Href="/signup">Signing up</BUILink> and using Task Story is Free, so give Task Story a try. And then send us some feedback about what you like and don't like about it.
+			</BUIQuote>
+		}
+	</LeftContent>
+	<RightContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.ProjectManagementConceptSuccessfulStrategyMotivation" Alt="@(nameof(SVG.Vecteezy.ProjectManagementConceptSuccessfulStrategyMotivation))" />
+	</RightContent>
+</BUISideBySide>
+
+<BUIQuote Color="Color.Info" Class="mt-5 mb-5 pt-3 pb-3">
+	<BUIParagraph>
+		True Agile development is a mindset that is developer driven. This mindset asserts that developers continuously evaluate and adapt to new problems, using learnings from our previous work, mistakes, and customer feedback. It's about using the best tools and workflows for the job, even if that means switching tools and workflows for every task.
+	</BUIParagraph>
+</BUIQuote>
+
+<ClickHereToCreateAccount />
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnCenterCenter" RightClass="@Flex.ColumnLeftCenter"
+			   Title="Benefits of the Task Story system!">
+	<LeftContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.SuccessfulIdeaStartupBusinessGrowthConceptPeople" Alt="@(nameof(SVG.Vecteezy.SuccessfulIdeaStartupBusinessGrowthConceptPeople))" />
+	</LeftContent>
+	<RightContent>
+		<BUIParagraph>
+			Task Story is tailor-made for agile and continuous delivery workflows. And through these workflows developers and teams can be empowered to work through problems with greater efficiency and productivity, delivering features faster while shipping less bugs, which means more features can be implemented sooner, and iterations can happen more frequently.
+		</BUIParagraph>
+		<BUIParagraph>
+			With Task Story's lazor-focused guidance through the documentation process, teams can spend a great deal less time working on documentation, and much more time on the problem solving and delivery process. Here at Stoic Dreams, we'd estimate we spend about 10% of our time documenting and collaborating, with the other 90% being left to focus purely on development. This provides us with much more time to work on researching, experimentating, testing, prototyping, and delivering than what we've had using other workflows.
+		</BUIParagraph>
+		<BUIParagraph>
+			Organization is handled through a simple and effective tagging system. Problems and Solutions are tagged automatically based on their name. When creating Problems and Solutions, the creator is automatically tagged as the owner. This is one of the more powerful systems in Task Story, and we're just getting started with it.
+		</BUIParagraph>
+	</RightContent>
+</BUISideBySide>
+<BUIStandardSection Title="">
+</BUIStandardSection>
+
+<ClickHereToViewPricing />
+
+<PageFooter />
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.AgileProjectManagement;
+		ContinueButton = ("/docs/workflows", PageTitles.DocWorkflow);
+		await base.OnInitializedAsync();
+	}
+}

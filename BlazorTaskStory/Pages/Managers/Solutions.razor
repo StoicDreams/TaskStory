@@ -1,0 +1,16 @@
+﻿@inherits BUIPage
+@page "/solutions"
+
+<TagFilterDisplay />
+
+<SolutionManager />
+
+<MarkdownGuide />
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.SolutionManager;
+		await base.OnInitializedAsync();
+	}
+}

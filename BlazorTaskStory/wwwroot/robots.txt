@@ -1,0 +1,7 @@
+﻿User-agent: Googlebot
+Allow: /nogooglebot/
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.taskstory.com/sitemap.xml

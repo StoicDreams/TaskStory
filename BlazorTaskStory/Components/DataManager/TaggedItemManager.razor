@@ -1,0 +1,660 @@
+﻿@inherits WebCore
+@typeparam TItem where TItem : BaseTaggedItem, new()
+@using System.Text
+
+<BUISectionTitle>
+	<MudText Typo="Typo.h6">
+		@SectionTitle
+		@if (UseGroupId && !IsNewItem)
+		{
+			<MudButton Variant="Variant.Filled" Size="Size.Medium" Class="ml-4" Color="Filter.FilterChipColor(TagNamePrefix)" OnClick="()=>Filter.ToggleTag(Validate.CreateTagFromName(CurrentItem.Name, TagNamePrefix))">
+				Toggle Tag Filter - @Validate.CreateTagFromName(CurrentItem.Name, TagNamePrefix)
+			</MudButton>
+		}
+	</MudText>
+</BUISectionTitle>
+
+<BUITitledSection TitleTheme="TitleThemeColor" Title="@ItemTitle" Class="gap-4 mt-3 mb-4" ContentClass="list-view-grid" SessionKey="@GetSessionKeyMainSection">
+
+	<BUITitledSection TitleTheme="Color.Secondary" Class="sidemenu" Elevation="0" SessionKey="@GetSessionKeyMenu">
+		<TitleContent>
+			@ListHeader
+		</TitleContent>
+		<ChildContent>
+			@if (IsLoadingGroups || IsLoadingItems)
+			{
+				<BUIProgressBar />
+			}
+			else if (FlipState)
+			{
+				<MudDropContainer T="TItem" Items="SavedItems" Class="d-flex flex-column"
+							  ItemsSelector="ItemMovedDropzone" ItemDropped="ItemUpdated">
+					<ChildContent>
+						<MudList Clickable="true" Class="d-flex flex-column mud-height-full gap-2">
+							<MudListSubheader>
+								@if (!IsReadOnly)
+								{
+									<MudButton EndIcon="@Icons.Material.TwoTone.Add" Variant="Variant.Filled" Color="Color.Primary" OnClick="ShowAddItem" Class="mr-5">Add @DisplayName</MudButton>
+								}
+							</MudListSubheader>
+						</MudList>
+						<MudDropZone T="TItem" Identifier="CurrentItems" Class="flex-grow-1 gap-2" AllowReorder="true" />
+					</ChildContent>
+					<ItemRenderer>
+						<MudListItem Class="@GetItemClass(context)" Text="@context.Name" OnClick="() => SelectItem(context)" />
+					</ItemRenderer>
+				</MudDropContainer>
+			}
+			else
+			{
+				<MudDropContainer T="TItem" Items="SavedItems" Class="d-flex flex-column"
+							  ItemsSelector="ItemMovedDropzone" ItemDropped="ItemUpdated">
+					<ChildContent>
+						<MudList Clickable="true" Class="d-flex flex-column mud-height-full gap-2">
+							<MudListSubheader>
+								@if (!IsReadOnly)
+								{
+									<MudButton EndIcon="@Icons.Material.TwoTone.Add" Variant="Variant.Filled" Color="Color.Primary" OnClick="ShowAddItem" Class="mr-5">Add @DisplayName</MudButton>
+								}
+							</MudListSubheader>
+						</MudList>
+						<MudDropZone T="TItem" Identifier="CurrentItems" Class="flex-grow-1 gap-2" AllowReorder="true" />
+					</ChildContent>
+					<ItemRenderer>
+						<MudListItem Class="@GetItemClass(context)" Text="@context.Name" OnClick="() => SelectItem(context)" />
+					</ItemRenderer>
+				</MudDropContainer>
+			}
+		</ChildContent>
+	</BUITitledSection>
+
+	<BUIPaper Class="gap-3" PaperType="PaperTypes.FlexColumn | PaperTypes.Grow">
+		@if (IsLoadingGroups || IsLoadingItems)
+		{
+			<BUIProgressBar />
+		}
+		else if (IsReadOnly)
+		{
+			<BUIPaper PaperType="PaperTypes.FlexRow | PaperTypes.Wrap" Class="gap-3">
+				<MudSpacer />
+				<MudTooltip Text="@($"Delete {DisplayName}")">
+					<MudIconButton Icon="@Icons.Material.TwoTone.Delete" OnClick="DeleteItem" Variant="Variant.Filled" Color="Color.Error"></MudIconButton>
+				</MudTooltip>
+			</BUIPaper>
+			<BUIPaper PaperType="PaperTypes.FlexRow | PaperTypes.Wrap" Class="mud-width-full gap-3 ma-1 pa-1" Elevation="15">
+				@if (CurrentItem.Id == Guid.Empty)
+				{
+					<BUIQuote Color="Color.Info" Class="pa-3 ma-3 mud-width-full">
+						No @DisplayName Loaded
+					</BUIQuote>
+				}
+				else
+				{
+					@DisplayContent?.Invoke(GetDisplayItemParam)
+				}
+			</BUIPaper>
+		}
+		else
+		{
+			<BUIPaper PaperType="PaperTypes.Wrap" Elevation="15" Class="gap-3 align-start ml-2 pa-3">
+				<MudTextField T="string" Label="Name" MaxLength="50" Class="flex-none" Value="CurrentItem.Name" ValueChanged="UpdateItemName" HelperText="@($"Name of this {DisplayName}")" />
+				<BUIPaper PaperType="PaperTypes.None" MaxWidth="120px" Elevation="0">
+					<MudSelect T="string" Label="Tag Prefix" @bind-Value="CurrentPrefix">
+						@foreach (KeyValuePair<string, string> item in Prefixes)
+						{
+							<MudSelectItem Value="@item.Key">
+								<BUIPaper PaperType="PaperTypes.None" Elevation="0" Class="pr-6">
+									@item.Value
+								</BUIPaper>
+							</MudSelectItem>
+						}
+					</MudSelect>
+				</BUIPaper>
+				<BUIInputChips Items="CurrentItem.Tags" Class="flex-auto d-flex flex-row" ColorFilter="Filter.FilterChipColor" OnChange="HandleTagUpdate" ItemFilter="ApplyTagFromInput" Label="Tags" MaxLength="30" HelperText="Type in name of tag and press enter to add" />
+			</BUIPaper>
+			<BUIPaper PaperType="PaperTypes.FlexRow | PaperTypes.Wrap" Class="gap-3">
+				<MudSpacer />
+				<MudTooltip Text="@($"Copy {DisplayName} data as Markdown")">
+					<MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.TwoTone.Code" OnClick="CopyMarkdown" />
+				</MudTooltip>
+				<MudButton OnClick="ShowEditor" Color="Color.Secondary" Variant="Variant.Filled" Disabled="DisableShowEditor">Editor</MudButton>
+				<MudButton OnClick="ShowEditorAndPreview" Color="Color.Secondary" Variant="Variant.Filled" Disabled="DisableShowEditorAndPreview">Both</MudButton>
+				<MudButton OnClick="ShowPreview" Color="Color.Secondary" Variant="Variant.Filled" Disabled="DisableShowPreview">Rendered</MudButton>
+				<MudTooltip Text="@($"Copy {DisplayName} data as HTML")">
+					<MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.TwoTone.Html" OnClick="CopyHTML" />
+				</MudTooltip>
+				<MudSpacer />
+				@if (!IsNewItem && CustomButtons != null)
+				{
+					@CustomButtons(CurrentItem)
+				}
+				@if (PendingChanges)
+				{
+					<MudTooltip Text="@($"You have unsaved changes pending for this {DisplayName.ToLower()}. Click Save {DisplayName} to save, Click this button or select a {DisplayName.ToLower()} to undo changes.")">
+						<MudIconButton Icon="@Icons.Material.TwoTone.Undo" OnClick="UnloadChanges" Variant="Variant.Filled" Color="Color.Warning" />
+					</MudTooltip>
+				}
+				@if (!IsNewItem)
+				{
+					<MudTooltip Text="@($"Delete {DisplayName}")">
+						<MudIconButton Icon="@Icons.Material.TwoTone.Delete" OnClick="DeleteItem" Variant="Variant.Filled" Color="Color.Error"></MudIconButton>
+					</MudTooltip>
+				}
+				<MudButton EndIcon="@Icons.Material.TwoTone.Save" OnClick="SaveItem" Variant="Variant.Filled" Color="SaveButtonColor">Save @DisplayName</MudButton>
+			</BUIPaper>
+			@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+			{
+				<MudAlert Severity="Severity.Error" Class="">@ErrorMessage</MudAlert>
+			}
+			@DisplayContent?.Invoke(GetDisplayItemParam)
+		}
+	</BUIPaper>
+</BUITitledSection>
+
+@code {
+	[Parameter]
+	public string DisplayName { get; set; } = string.Empty;
+	[Parameter]
+	public RenderFragment<DisplayContentParam<TItem>>? DisplayContent { get; set; }
+	[Parameter]
+	public Action<TItem,TItem>? OnUnload { get; set; }
+	[Parameter]
+	public string DataType { get; set; } = string.Empty;
+	[Parameter]
+	public bool UseGroupId { get; set; }
+	[Parameter]
+	public string TagNamePrefix { get; set; } = string.Empty;
+	[Parameter]
+	public Func<TItem,TResult>? OnValidate { get; set; }
+	[Parameter]
+	public bool IsReadOnly { get; set; }
+	[Parameter]
+	public string[] RestrictTagPrefixes { get; set; } = Array.Empty<string>();
+	[Parameter]
+	public Func<TItem, RenderFragment>? CustomButtons { get; set; }
+
+	private string GetSessionKeyMainSection => $"ItemManager:Body:{DisplayName}";
+	private string GetSessionKeyMenu => $"ItemManager:Menu:{DisplayName}";
+
+	private string CurrentPrefix { get; set; } = "_";
+	private List<KeyValuePair<string, string>> Prefixes { get; } = new()
+	{
+		KeyValuePair.Create<string, string>("_", "Custom"),
+		KeyValuePair.Create<string, string>("project:", "Project"),
+		KeyValuePair.Create<string, string>("problem:", "Problem"),
+		KeyValuePair.Create<string, string>("solution:", "Solution"),
+		KeyValuePair.Create<string, string>("team:", "Team"),
+		KeyValuePair.Create<string, string>("person:", "Person"),
+		KeyValuePair.Create<string, string>("feature:", "Feature"),
+	};
+
+	private bool IsLoadingGroups => StaticData.IsLoading;
+	private Guid GetGroupId => UseGroupId ? GetSessionState<Guid>(StaticData.CurrentGroupIdKey, () => Guid.Empty).GetAwaiter().GetResult() : Guid.Empty;
+	private DisplayContentParam<TItem> GetDisplayItemParam => new() { Item = CurrentItem, NowShowing = NowShowing };
+	private string SectionTitle => $"Current {GetDisplayNamePlural}";
+	private string ListHeader => $"Current {GetDisplayNamePlural}";
+	private string NewTag { get; set; } = string.Empty;
+	private string NewItem { get; set; } = string.Empty;
+	private TItem CurrentItem { get; set; } = new();
+	private bool IsLoadingItems { get; set; }
+	private List<TItem> SavedItems { get; set; } = new();
+	private bool IsNewItem => CurrentItem.Id == Guid.Empty;
+	private string LastSaved { get; set; } = string.Empty;
+	private bool PendingChanges => LastSaved != CurrentItem.ToJson();
+	private Color SaveButtonColor => IsNewItem || PendingChanges ? Color.Success : Color.Default;
+	private Color TitleThemeColor => !IsReadOnly && (IsNewItem || PendingChanges) ? Color.Warning : Color.Success;
+	private string ErrorMessage { get; set; } = string.Empty;
+	private string ItemTitle => $"{DisplayName}: "
+		+ (IsReadOnly && CurrentItem.Id == Guid.Empty ? $"No {GetDisplayNamePlural} Loaded" :
+		(
+			(IsReadOnly ? CurrentItem.GetTitle : string.IsNullOrWhiteSpace(CurrentItem.Name) ? IsNewItem ? $"New {DisplayName}" : "Missing Name" : CurrentItem.Name)
+			+ (!IsReadOnly && !IsNewItem && PendingChanges ? " (Changes Pending Save)" : "")
+			+ $" - Owner: {GetOwner}"
+		))
+		;
+	private Guid LoadedGroupIdForRefresh { get; set; }
+
+	private string GetDisplayNamePlural => DisplayName.Length == 0 ? string.Empty : (DisplayName.Last() == 'y' ? $"{DisplayName.Substring(0, DisplayName.Length - 1)}ies" : $"{DisplayName}s");
+
+	private string GetItemClass(TItem item) => $"mud-theme-{(item.Id == CurrentItem.Id ? "info" : "dark")} mb-2 rounded {(item.Tags.Contains("bug") ? "isbug" : "")}".Trim();
+
+	protected override async Task OnInitializedAsync()
+	{
+		LoadedGroupIdForRefresh = await GetSessionState<Guid>(StaticData.CurrentGroupIdKey, () => Guid.Empty);
+		_ = LoadMyItems();
+		await base.OnInitializedAsync();
+	}
+
+	private string GetOwner
+	{
+		get
+		{
+			if (!UseGroupId) return "Private";
+			return $"{CurrentItem.Tags.FirstOrDefault(x => x.StartsWith("person:")) ?? Validate.MyTag}".Replace("person:", "");
+		}
+	}
+
+	private string ApplyTagFromInput(string tag)
+	{
+		if (string.IsNullOrWhiteSpace(tag)) return tag;
+		if (CurrentPrefix == "_") return Validate.FilterTagName(tag);
+		return Validate.FilterTagName($"{CurrentPrefix}{tag}");
+	}
+
+	private int NowShowing { get; set; } = 3;
+	private bool DisableShowEditor => NowShowing == 1;
+	private bool DisableShowEditorAndPreview => NowShowing == 3;
+	private bool DisableShowPreview => NowShowing == 2;
+	private void ShowEditor()
+	{
+		NowShowing = 1;
+		StateHasChanged();
+	}
+
+	private void ShowEditorAndPreview()
+	{
+		NowShowing = 3;
+		StateHasChanged();
+	}
+
+	private void ShowPreview()
+	{
+		NowShowing = 2;
+		StateHasChanged();
+	}
+
+	private void UpdateItemName(string value)
+	{
+		if (!string.IsNullOrWhiteSpace(TagNamePrefix))
+		{
+			string tag = Validate.CreateTagFromName(value, TagNamePrefix);
+			SetTag(tag, TagNamePrefix);
+		}
+		CurrentItem.Name = value.Trim();
+	}
+
+
+	private void HandleTagUpdate(ICollection<string> tags)
+	{
+		if (!string.IsNullOrWhiteSpace(TagNamePrefix))
+		{
+			LimitTagPrefixToSingle(TagNamePrefix);
+		}
+		foreach (string prefix in RestrictTagPrefixes)
+		{
+			LimitTagPrefixToSingle(prefix);
+		}
+		StateHasChanged();
+	}
+
+	private void LimitTagPrefixToSingle(string prefix)
+	{
+		bool found = false;
+		string[] tagList = CurrentItem.Tags.ToArray().Reverse().ToArray();
+		foreach (string tag in tagList)
+		{
+			if (!tag.StartsWith(prefix)) continue;
+			if (!found)
+			{
+				found = true;
+				continue;
+			}
+			CurrentItem.Tags.Remove(tag);
+		}
+	}
+
+	private void ItemUpdated(MudItemDropInfo<TItem> dropItem)
+	{
+		int newId = dropItem.IndexInZone + 1;
+		bool movingUp = dropItem.Item.SortId > newId;
+		dropItem.Item.SortId = newId;
+		foreach (TItem item in SavedItems)
+		{
+			if (item.Id == dropItem.Item.Id) { continue; }
+			if (item.SortId < dropItem.Item.SortId) { continue; }
+			if (item.SortId == dropItem.Item.SortId)
+			{
+				item.SortId += movingUp ? 1 : -1;
+				continue;
+			}
+			item.SortId++;
+		}
+		_ = UpdateSort();
+	}
+
+	private bool ItemMovedDropzone(TItem item, string zone)
+	{
+		return true;
+	}
+
+	protected override async ValueTask OnSessionStateUpdate()
+	{
+		await LoadMyItems();
+		await base.OnSessionStateUpdate();
+	}
+
+	private async ValueTask LoadMyItems()
+	{
+		if (IsLoadingGroups || IsLoadingItems)
+		{
+			QueueLoadItems = true;
+			return;
+		}
+		IsLoadingItems = true;
+		StateHasChanged();
+		SavedItems.Clear();
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = DataType,
+				GroupId = GetGroupId,
+				Data = Filter.Tags.ToList().ConvertToWebEncryptedString()
+			};
+		TResult<string[]> tItems = await Api.PostJsonAsync<string[], ApiDataTransfer>("Items", dataTransfer);
+		Filter.SyncingTagUpdates(() =>
+		{
+			if (tItems.IsOkay)
+			{
+				string error = string.Empty;
+				foreach (string data in tItems.Result)
+				{
+					try
+					{
+						TItem? item = data.ConvertFromWebEncryptedString<TItem>();
+						if (item == null) { continue; }
+						SavedItems.Add(item);
+						Filter.ApplyUsingTags(item.Tags);
+					}
+					catch (Exception ex)
+					{
+						error = ex.Message;
+					}
+				}
+				if (error != string.Empty)
+				{
+					Snackbar.Add(error, Severity.Error);
+				}
+			}
+			ApplySortIds();
+			ApplyDefaultItem();
+			StateHasChanged();
+		});
+		IsLoadingItems = false;
+		if (QueueLoadItems)
+		{
+			QueueLoadItems = false;
+			await LoadMyItems();
+		}
+		StateHasChanged();
+	}
+	private bool QueueLoadItems { get; set; }
+
+	private void ApplyDefaultItem()
+	{
+		if (SavedItems.Count > 0 && (
+			CurrentItem.Id == Guid.Empty || !SavedItems.Contains(CurrentItem)
+		))
+		{
+			CurrentItem = SavedItems[0];
+			NowShowing = 2;
+			LastSaved = CurrentItem.ToJson();
+			return;
+		}
+		CurrentItem = new();
+		NowShowing = 3;
+		LastSaved = CurrentItem.ToJson();
+	}
+
+	private async Task CopyMarkdown()
+	{
+		await CopyToClipboard(CurrentItem.GetMarkdown);
+		Snackbar.Add($"Markdown for {CurrentItem.Name} copied to clipboard", Severity.Info);
+	}
+
+	private async Task CopyHTML()
+	{
+		await CopyToClipboard(Markdown.GetHtml(CurrentItem.GetMarkdown));
+		Snackbar.Add($"HTML for {CurrentItem.Name} copied to clipboard", Severity.Info);
+	}
+
+	private void SetIsLoadingItems(bool flag)
+	{
+		IsLoadingItems = flag;
+		StateHasChanged();
+	}
+
+	private async Task SelectItem(TItem item)
+	{
+		UnloadChanges();
+		CurrentItem = item;
+		LastSaved = CurrentItem.ToJson();
+		NowShowing = CurrentItem.NeedsContent ? 3 : 2;
+		await Task.Delay(0);
+		FlipState = !FlipState;
+	}
+
+	private async Task ShowAddItem()
+	{
+		UnloadChanges();
+		CurrentItem = new();
+		CurrentItem.MergeTags(Filter.Tags);
+		LastSaved = CurrentItem.ToJson();
+		NowShowing = 3;
+		await Task.Delay(0);
+		FlipState = !FlipState;
+	}
+
+	private void UnloadChanges()
+	{
+		ErrorMessage = string.Empty;
+		TItem? cached = LastSaved.FromJson<TItem>();
+		if (cached == null) { return; }
+		CurrentItem.Tags = cached.Tags;
+		CurrentItem.Name = cached.Name;
+		OnUnload?.Invoke(CurrentItem, cached);
+	}
+
+	private async Task SaveItem()
+	{
+		if (!ItemIsValidForSave())
+		{
+			return;
+		}
+		IsLoadingItems = true;
+		StateHasChanged();
+		Filter.ApplyUsingTags(CurrentItem.Tags);
+		if (CurrentItem.Id == Guid.Empty)
+		{
+			await SaveNewItem();
+		}
+		else
+		{
+			await UpdateItem(CurrentItem);
+		}
+		IsLoadingItems = false;
+		StateHasChanged();
+	}
+
+	private bool ItemIsValidForSave()
+	{
+		ErrorMessage = string.Empty;
+		CurrentItem.Name = CurrentItem.Name.Trim();
+		if (string.IsNullOrWhiteSpace(CurrentItem.Name))
+		{
+			ErrorMessage = $"Please enter a name for this {DisplayName.ToLower()} before saving.";
+			return false;
+		}
+		if (CurrentItem.Tags.Count == 0)
+		{
+			ErrorMessage = $"{DisplayName} need at least one tag. Tags are used to help you organize and group together {DisplayName.ToLower()}s, solutions, and tasks.";
+			return false;
+		}
+		if (OnValidate != null)
+		{
+			TResult tResult = OnValidate.Invoke(CurrentItem);
+			if (!tResult.IsOkay)
+			{
+				ErrorMessage = FirstNotEmpty(tResult.Message, $"{DisplayName} failed validation.");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private async ValueTask SaveNewItem()
+	{
+		CurrentItem.Id = Guid.NewGuid();
+		CurrentItem.SortId = SavedItems.Count;
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = DataType,
+				GroupId = GetGroupId,
+				Data = CurrentItem.ConvertToWebEncryptedString()
+			};
+		TResult tGuid = await Api.PostJsonAsync<Guid, ApiDataTransfer>($"Item/{CurrentItem.Id}", dataTransfer);
+		if (!tGuid.IsOkay)
+		{
+			Snackbar.Add(FirstNotEmpty(tGuid.Message, $"An unknown error occurred saving new {DisplayName.ToLower()}."), Severity.Error);
+			return;
+		}
+		await SaveItemTags(CurrentItem);
+		SavedItems.Add(CurrentItem);
+		ApplySortIds();
+		LastSaved = CurrentItem.ToJson();
+		StateHasChanged();
+		Snackbar.Add(FirstNotEmpty(tGuid.Message, $"Successfully Created {CurrentItem.Name}."), Severity.Success);
+	}
+
+	private async ValueTask UpdateItem(TItem item, bool skipResult = false)
+	{
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = DataType,
+				GroupId = GetGroupId,
+				Data = item.ConvertToWebEncryptedString()
+			};
+		TResult tResult = await Api.PostJsonAsync<Guid, ApiDataTransfer>($"Item/{item.Id}", dataTransfer);
+		await SaveItemTags(item);
+		if (skipResult) return;
+		if (!tResult.IsOkay)
+		{
+			Snackbar.Add(FirstNotEmpty(tResult.Message, $"An unknown error occurred updating {DisplayName.ToLower()}."), Severity.Error);
+			return;
+		}
+		if (CurrentItem.Id == item.Id)
+		{
+			LastSaved = item.ToJson();
+		}
+		StateHasChanged();
+		FlipState = !FlipState;
+		Snackbar.Add(FirstNotEmpty(tResult.Message, $"Successfully Updated {item.Name}."), Severity.Success);
+	}
+
+	private void SetTag(string tag, string removePrefix)
+	{
+		if (!string.IsNullOrWhiteSpace(removePrefix))
+		{
+			RemovePrefixTagFromTagFilter(removePrefix);
+		}
+		ApplyTag(tag);
+	}
+
+	private void ApplyTag(string tag)
+	{
+		if (string.IsNullOrWhiteSpace(tag)) { return; }
+		CurrentItem.Tags.Insert(0, tag);
+		StateHasChanged();
+	}
+
+	private void RemovePrefixTagFromTagFilter(string prefix)
+	{
+		string[] tags = CurrentItem.Tags.ToArray();
+		bool updated = false;
+		foreach (string tag in tags)
+		{
+			if (!tag.StartsWith(prefix)) { continue; }
+			CurrentItem.Tags.Remove(tag);
+			updated = true;
+		}
+		if (updated)
+		{
+			StateHasChanged();
+		}
+	}
+
+	private async ValueTask SaveItemTags(TItem item)
+	{
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = DataType,
+				GroupId = GetGroupId,
+				Data = item.Tags.ConvertToWebEncryptedString()
+			};
+		TResult tResult = await Api.PostJsonAsync<Guid, ApiDataTransfer>($"Tags/{item.Id}", dataTransfer);
+	}
+
+	private void ApplySortIds()
+	{
+		int sortId = 1;
+		SavedItems.Sort((a, b) => a.SortId.CompareTo(b.SortId));
+		foreach (TItem item in SavedItems)
+		{
+			item.SortId = sortId++;
+		}
+	}
+
+	private async ValueTask UpdateSort()
+	{
+		if (IsLoadingGroups || IsLoadingItems)
+		{
+			QueueUpdateSort = true;
+			return;
+		}
+		IsLoadingItems = true;
+		StateHasChanged();
+		ApplySortIds();
+		List<ValueTask> tasks = new();
+		foreach (TItem item in SavedItems)
+		{
+			tasks.Add(UpdateItem(item, true));
+		}
+		IsLoadingItems = false;
+		StateHasChanged();
+		foreach (ValueTask task in tasks)
+		{
+			await task.ConfigureAwait(false);
+		}
+		if (QueueUpdateSort)
+		{
+			QueueUpdateSort = false;
+			await UpdateSort();
+		}
+	}
+
+	private bool QueueUpdateSort { get; set; }
+
+	private async Task DeleteItem()
+	{
+		IsLoadingItems = true;
+		StateHasChanged();
+		ApiDataTransfer dataTransfer = new()
+			{
+				DataType = DataType,
+				GroupId = GetGroupId,
+				Data = TResult<Guid>.Success(CurrentItem.Id).ConvertToWebEncryptedString()
+			};
+		TResult tResult = await Api.PostJsonAsync<Guid, ApiDataTransfer>($"Item/Delete", dataTransfer);
+		if (!tResult.IsOkay)
+		{
+			IsLoadingItems = false;
+			StateHasChanged();
+			Snackbar.Add(FirstNotEmpty(tResult.Message, $"An unknown error occurred deleting {DisplayName.ToLower()}."), Severity.Error);
+			return;
+		}
+		Snackbar.Add(FirstNotEmpty(tResult.Message, $"Successfully Deleted {CurrentItem.Name}."), Severity.Success);
+		SavedItems.Remove(CurrentItem);
+		ApplyDefaultItem();
+		IsLoadingItems = false;
+		StateHasChanged();
+	}
+}

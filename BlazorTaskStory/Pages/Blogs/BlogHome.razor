@@ -1,0 +1,21 @@
+﻿@inherits BUIPage
+@page "/blog"
+@page "/blogs"
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnCenterCenter" RightClass="@Flex.ColumnLeftCenter"
+	Title="Task Story blogs for your information on Project Management and Continuous Agile Development!">
+	<LeftContent>
+
+	</LeftContent>
+	<RightContent>
+		Coming Soon!
+	</RightContent>
+</BUISideBySide>
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.BlogHome;
+		await base.OnInitializedAsync();
+	}
+}

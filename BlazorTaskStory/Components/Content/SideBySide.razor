@@ -1,0 +1,45 @@
+﻿@inject IMarkdown Markdown
+@inject ITaggedItemValidation Validate
+
+<BUIPaper PaperType="PaperTypes.Wrap" Elevation="0" Class="gap-3 pa-2 side-by-side">
+	@if ((NowShowing & 1) > 0)
+	{
+		<BUIInputTextAutoFormat Label="@Name" Value="@Value" ValueChanged="ValueChanged"
+			HelperText="Supports Markdown"
+			Placeholder="@GetPlaceholderInput"
+			CodeFormat="markdown" Class="" />
+	}
+	@if ((NowShowing & 2) > 0)
+	{
+		<BUIPaper PaperType="PaperTypes.None" Elevation="20" Class="pa-3">@GetRender</BUIPaper>
+	}
+</BUIPaper>
+
+@code {
+	[Parameter]
+	public string Name { get; set; } = string.Empty;
+	[Parameter]
+	public int NowShowing { get; set; }
+	[Parameter]
+	public string Value { get; set; } = string.Empty;
+	[Parameter]
+	public EventCallback<string> ValueChanged { get; set; }
+	[Parameter]
+	public Func<string>? OnRender { get; set; }
+	[Parameter]
+	public string PlaceholderInput { get; set; } = string.Empty;
+	[Parameter]
+	public string PlaceholderDisplay { get; set; } = "None";
+
+	private string GetPlaceholderInput => Validate.GetPlaceholder(PlaceholderInput);
+	private string GetPlaceholderDisplay => PlaceholderDisplay;
+	private MarkupString GetRender
+	{
+		get
+		{
+			string rendered = OnRender?.Invoke() ?? "";
+			if (string.IsNullOrEmpty(rendered)) return Markdown.GetMarkup(GetPlaceholderDisplay);
+			return Markdown.GetMarkup(rendered);
+		}
+	}
+}

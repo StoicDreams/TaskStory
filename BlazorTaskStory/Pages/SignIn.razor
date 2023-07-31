@@ -1,0 +1,26 @@
+﻿@inherits BUIPage
+@page "/Login"
+@page "/signin"
+@page "/signup"
+@page "/createaccount"
+@page "/Admin"
+
+<BUILogin ShowSignupFirst="ShowSignupFirst" />
+
+@code {
+	private bool ShowSignupFirst { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (Auth.IsLoggedIn)
+		{
+			string redirectUrl = await GetSessionState<string>("LoginRedirect", () => "/");
+			NavManager.NavigateTo(redirectUrl);
+			return;
+		}
+		string page = NavManager.Uri.ToLower();
+		ShowSignupFirst = page.Contains("signup") || page.Contains("createaccount");
+		Title = "Account Login";
+		await base.OnInitializedAsync();
+	}
+}

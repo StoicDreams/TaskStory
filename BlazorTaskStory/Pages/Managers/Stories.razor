@@ -1,0 +1,14 @@
+﻿@inherits BUIPage
+@page "/stories"
+
+<TagFilterDisplay />
+
+<StoryManager />
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.StoryManager;
+		await base.OnInitializedAsync();
+	}
+}

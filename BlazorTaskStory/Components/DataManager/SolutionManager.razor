@@ -1,0 +1,56 @@
+﻿@inherits WebCore
+
+<TaggedItemManager TItem="SolutionDraft" DisplayName="Solution" TagNamePrefix="solution:"
+				   UseGroupId="true"
+				   DataType="Solution"
+				   OnValidate="ValidateSave"
+				   RestrictTagPrefixes="@(new[] {"person:"})"
+				   OnUnload="HandleUnload">
+	<DisplayContent>
+		<MudTabs Elevation="15" Rounded="true" Class="" Color="Color.Primary" Border="true">
+			<MudTabPanel Text="Summary">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Summarize your findings and progress here as you work through the solution.
+				</BUIQuote>
+				<SideBySide Name="Summary" NowShowing="context.NowShowing" @bind-Value="context.Item.Summary" OnRender="() => context.Item.Summary" />
+			</MudTabPanel>
+			<MudTabPanel Text="Investigation">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Use this space to provide notes and findings from any investigations into this solution.
+				</BUIQuote>
+				<SideBySide Name="Investigation" NowShowing="context.NowShowing" @bind-Value="context.Item.Investigation" OnRender="() => context.Item.Investigation" />
+			</MudTabPanel>
+			<MudTabPanel Text="Testing">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Document notes and results on any prototyping, testing, and benchmarking performed here.
+				</BUIQuote>
+				<SideBySide Name="Testing" NowShowing="context.NowShowing" @bind-Value="context.Item.Testing" OnRender="() => context.Item.Testing" />
+			</MudTabPanel>
+			<MudTabPanel Text="Notes">
+				<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+					Use this space to detail any developer specific notes.
+				</BUIQuote>
+				<SideBySide Name="Developer Notes" NowShowing="context.NowShowing" @bind-Value="context.Item.DevNotes" OnRender="() => context.Item.DevNotes" />
+			</MudTabPanel>
+		</MudTabs>
+	</DisplayContent>
+</TaggedItemManager>
+
+@code {
+	private TResult ValidateSave(SolutionDraft item)
+	{
+		if (!Validate.PersonIsOwner(item.Tags)) return TResult.Exception("Solutions can only be edited by the owner. You can delete the current owner and save if you are taking over ownership of the problem and its solutions.");
+		if (!Validate.HasContent(item.Summary)) item.Summary = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Testing)) item.Testing = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.Investigation)) item.Investigation = Validate.DefaultToDoContent;
+		if (!Validate.HasContent(item.DevNotes)) item.DevNotes = Validate.DefaultToDoContent;
+		return TResult.Success("Solution can be saved");
+	}
+
+	private void HandleUnload(SolutionDraft item, SolutionDraft cache)
+	{
+		item.Summary = cache.Summary;
+		item.DevNotes = cache.DevNotes;
+		item.Owner = cache.Owner;
+	}
+}

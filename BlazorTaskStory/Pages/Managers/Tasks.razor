@@ -1,0 +1,16 @@
+﻿@inherits BUIPage
+@page "/tasks"
+
+<TagFilterDisplay />
+
+<TaskManager />
+
+<MarkdownGuide />
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		Title = PageTitles.TaskManager;
+		await base.OnInitializedAsync();
+	}
+}

@@ -1,0 +1,33 @@
+﻿@inherits WebCore
+
+<TaggedItemManager TItem="TaskDetail" DisplayName="Task" TagNamePrefix=""
+	DataType="Task"
+	OnValidate="ValidateSave"
+	OnUnload="HandleUnload"
+	>
+	<DisplayContent>
+		<BUIQuote Color="Color.Info" Class="@StaticData.PanelQuoteClass">
+			Use this space to detail whatever you need to detail about this task. Task details are only seen by you, so use this space as little or as much as you need.
+		</BUIQuote>
+		<SideBySide Name="Details" NowShowing="context.NowShowing" @bind-Value="context.Item.Details" OnRender="() => context.Item.Details" />
+	</DisplayContent>
+</TaggedItemManager>
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		
+		await base.OnInitializedAsync();
+	}
+
+	private TResult ValidateSave(TaskDetail item)
+	{
+
+		return TResult.Success("Task can be saved");
+	}
+
+	private void HandleUnload(TaskDetail item, TaskDetail cache)
+	{
+		item.Details = cache.Details;
+	}
+}

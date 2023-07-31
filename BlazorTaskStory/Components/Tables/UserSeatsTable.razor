@@ -1,0 +1,37 @@
+﻿@inherits BUICore
+
+<BUIStaticTable Items="CurrentSeats" Columns="SeatColumns" />
+
+@code {
+	[Parameter]
+	public List<SubscriberSeat> CurrentSeats { get; set; } = new();
+	[Parameter]
+	public Func<SubscriberSeat, Task>? RemoveSeat { get; set; }
+
+	private List<TableColumn<SubscriberSeat>> SeatColumns  => new()
+	{
+		new() { Title = "Name".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@item.Name
+		}},
+		new() { Title = "Email".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@item.Email
+		}},
+		new() { Title = "Active".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			<MudTooltip Text="@(item.IsActive ? "Seat is currently Active this billing cycle" : "Seat is currently In-Active this billing cycle")" Class="ml-auto mr-auto">
+				<MudIcon Color="@(item.IsActive ? Color.Success : Color.Default)" Icon="@Icons.Material.TwoTone.Circle" Class="ml-auto mr-auto" />
+			</MudTooltip>
+		}},
+		new() { Title = "Actions".ConvertToRenderFragment(), Cell = item => __builder =>
+		{
+			@if (RemoveSeat != null && item.IsRemoveable)
+			{
+				<MudTooltip Text="@($"Remove {item.Name} from your current seats.")">
+					<MudIconButton Icon="@Icons.Material.TwoTone.Delete" Color="Color.Error" OnClick="() => RemoveSeat(item)" />
+				</MudTooltip>
+			}
+		}}
+	};
+}

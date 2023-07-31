@@ -1,0 +1,159 @@
+﻿
+<BUIImageContent Title="Recommended Team Workflow for Continuous Agile Development"
+	Image="@SVG.Vecteezy.WorkforceOrganizationAndManagementWorkflowProcesses"
+	Alt="@(nameof(SVG.Vecteezy.WorkforceOrganizationAndManagementWorkflowProcesses))"
+	ImagePosition="PositionLR.Left"
+	>
+	<BUIParagraph>
+		Modern companies, teams, and software developers need tools and standards that will help them properly organize and manage their software developement so they get to solving problems and delivering solutions with shorter development cycles and better user experiences.
+	</BUIParagraph>
+	<BUIParagraph>
+		Task Story helps teams achieve this by organizing the development workflow to start with defining problems that need to be solved, with an emphasis on defining the problem, and not worrying at that time about any solutions. This allows those defining problems more focus on declaring a well-defined problem while freeing their mind to not be concerned about solutions.
+	</BUIParagraph>
+</BUIImageContent>
+
+<BUIStandardSection Elevation="@BUIStyles.ElevationFlat" Class="@BUIStyles.ClassStandardSection">
+	<BUIPaper PaperType="PaperTypes.FlexRow | PaperTypes.Grow" Class="@Flex.ColumnCenterCenter">
+		<BUIImage Src="@Images.HomeContent.Dashboard" PaperClass="ma-auto" ImageClass="ma-auto" Width="80%" MaxWidth="1600" />
+	</BUIPaper>
+</BUIStandardSection>
+
+<BUIImageContent Title="Ownership"
+				 Image="@SVG.Vecteezy.TimeManagementConceptPlanningOrganizationWorking"
+				 Alt="@(nameof(SVG.Vecteezy.TimeManagementConceptPlanningOrganizationWorking))"
+				 ImagePosition="PositionLR.Left">
+	<BUIParagraph>
+		Ownership is an important concept in continuous agile development that plays an important role in driving iterative development with short release cycles.
+	</BUIParagraph>
+	<BUIParagraph>
+		Each part of the workflow (Project, Feature, Problem, Solution, Task) only has one owner at any given time, but ownership can move around to different people during its progress towards completion. A single owner does not necessitate only one person is working on a part at any one time. The purpose of the single owner principal is to dictate that a single person is taking lead and ownership of the work being done. This person is the ultimate decision maker for that part of the work, but should factor in their teams discussions, facts, and opinions when determining directions to take when deciding how to complete the work.
+	</BUIParagraph>
+	<BUIQuote Class="mt-4 pa-2" Color="Color.Success">
+		<BUIParagraph>
+			When someone declares a new problem in Task Story. They are the initial owner of that problem. They are responsible for providing details over who is having a problem, what the problem is, where the problem is occurring, when is the problem occurring, why is this a problem, and how this problem can be replicated.
+		</BUIParagraph>
+		<BUIParagraph>
+			When a developer is going to work on a problem, they will take ownership over the problem. It is now their responsibility to investigate the problem, evaluate and document potential solutions, perform any prototyping, testing, and benchmarking if needed, and ultimately decide on and implement the best solution based on their findings.
+		</BUIParagraph>
+	</BUIQuote>
+</BUIImageContent>
+
+<BUIImageContent Title="Define your Project"
+				 Image="@SVG.Vecteezy.CrossPlatformDevelopmentFlatModernDesignIllustration"
+				 Alt="@(nameof(SVG.Vecteezy.CrossPlatformDevelopmentFlatModernDesignIllustration))"
+				 ImagePosition="PositionLR.Right">
+	<BUIParagraph>
+		Document high-level details of the project.
+	</BUIParagraph>
+	<BUIParagraph>
+		Define who will benefit from this project; What the project is; Where the project is used; When the resulting product is used or needed; Why there is a need or why people will use; And how will users discover the product, how will it be used, etc.
+	</BUIParagraph>
+</BUIImageContent>
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnCenterCenter" RightClass="@Flex.ColumnLeftCenter"
+			   Title="Define Features throughout a Projects Lifecycle">
+	<LeftContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.BusinessTeamworkWithPiecesOfPuzzleInOffice" Alt="@(nameof(SVG.Vecteezy.BusinessTeamworkWithPiecesOfPuzzleInOffice))" />
+	</LeftContent>
+	<RightContent>
+		<BUIParagraph>
+			When defining a new project, you may or may not want to define some key features from the start.
+		</BUIParagraph>
+		<BUIParagraph>
+			This will vary depending on the type of project and how much thought has been given to it at this point. When defining at the start, limit details to very abstract explenations.
+		</BUIParagraph>
+		<BUIParagraph>
+			Features should be continuously added and updated throughout development. Adding new feature documentation as solutions are implementing them for the first time, and updating existing feature documentation when solution implementations are applicable to them.
+		</BUIParagraph>
+	</RightContent>
+</BUISideBySide>
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnLeftCenter" RightClass="@Flex.ColumnCenterCenter"
+			   Title="Declare and Define the Problem">
+	<LeftContent>
+		<BUIParagraph>
+			Problems can and should come from virtually any source. Managers, admin, customer feedback, logs, analytics, developers, and more.
+		</BUIParagraph>
+		<BUIParagraph>
+			Focus on understanding and defining the specific problem that needs addressed.
+		</BUIParagraph>
+		<BUIParagraph>
+			When possible, define the problem from the user perspective. And never define an expected solution.
+		</BUIParagraph>
+		<MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mt-4">
+			Good: As a user, I need a way to purchase service X.
+		</MudAlert>
+		<MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mt-4">
+			Bad: As a user, I need a product page where I can view details of and purchase service X with.
+		</MudAlert>
+	</LeftContent>
+	<RightContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.TeamMetaphorPeopleConnectingPuzzleElementsVector" Alt="@(nameof(SVG.Vecteezy.TeamMetaphorPeopleConnectingPuzzleElementsVector))" />
+	</RightContent>
+</BUISideBySide>
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnCenterCenter" RightClass="@Flex.ColumnLeftCenter"
+			   Title="Prioritize Problems">
+	<LeftContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.MyOrderListIllustrationExclusiveDesignInspiration" Alt="@(nameof(SVG.Vecteezy.MyOrderListIllustrationExclusiveDesignInspiration))" />
+	</LeftContent>
+	<RightContent>
+		<BUIParagraph>
+			The project owner is responsible for prioritizing problems within their project.
+		</BUIParagraph>
+		<BUIParagraph>
+			Prioritization should be a general guide, but developers should not be restrained by this prioritization. There could be technical reasons the project owner is not aware of that necessitates a different priority. The developer could see 2 separate problems as being related and want to tackle them both at the same time, even though their priorities are widely different.
+		</BUIParagraph>
+		<BUIParagraph>
+			If a developer needs to change prioritization, they should communicate this to the project owner to make the change, or communicate the change being made.
+		</BUIParagraph>
+	</RightContent>
+</BUISideBySide>
+
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnLeftCenter" RightClass="@Flex.ColumnCenterCenter"
+			   Title="Developer Takes Ownership of Problem">
+	<LeftContent>
+		<BUIParagraph>
+			When a developer is ready to work on a problem, they will take ownership of that problem.
+		</BUIParagraph>
+	</LeftContent>
+	<RightContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.EngineerAndDeveloperWithLaptopAndTabletCode" Alt="@(nameof(SVG.Vecteezy.EngineerAndDeveloperWithLaptopAndTabletCode))" />
+	</RightContent>
+</BUISideBySide>
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnCenterCenter" RightClass="@Flex.ColumnLeftCenter"
+			   Title="Developer Engineers Solutions">
+	<LeftContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.DeveloperAtLaptopAndComputerWithOpenRoboticSoft" Alt="@(nameof(SVG.Vecteezy.DeveloperAtLaptopAndComputerWithOpenRoboticSoft))" />
+	</LeftContent>
+	<RightContent>
+		<BUIParagraph>
+			The developer researches and documents potential solutions to solve the given problem.
+		</BUIParagraph>
+		<BUIParagraph>
+			When applicable, each solution should be prototyped and measured, with applicable documentation to show the results.
+		</BUIParagraph>
+		<BUIParagraph>
+			Based on the measured findings, the developer will decide on a final solution and implement it.
+		</BUIParagraph>
+	</RightContent>
+</BUISideBySide>
+
+<BUISideBySide Elevation="@BUIStyles.ElevationStandard" Class="@BUIStyles.ClassStandardSection" LeftClass="@Flex.ColumnLeftCenter" RightClass="@Flex.ColumnCenterCenter"
+			   Title="Resolve Problems by Publishing its Story">
+	<LeftContent>
+		<BUIParagraph>
+			When a problem has all applicable solutions implemented it is time to close it by publishing it into a Story.
+		</BUIParagraph>
+		<BUIParagraph>
+			The Story is a merging of documentation that shows the Problem, which Solutions were implemented to resolve the problem, and what other solutions were also considered but ultimately dropped.
+		</BUIParagraph>
+	</LeftContent>
+	<RightContent>
+		<BUIImagePadded Image="@SVG.Vecteezy.ContentWriterBloggerBulletJournalistOrPublishing" Alt="@(nameof(SVG.Vecteezy.ContentWriterBloggerBulletJournalistOrPublishing))" />
+	</RightContent>
+</BUISideBySide>
+
+<ClickHereToCreateAccount />

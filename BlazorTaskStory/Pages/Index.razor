@@ -1,0 +1,17 @@
+﻿@inherits BUIPage
+@page "/"
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		if (Auth.IsLoggedIn)
+		{
+			NavManager.NavigateTo("/dashboard");
+		}
+		else
+		{
+			NavManager.NavigateTo("/agile-project-management");
+		}
+		await base.OnInitializedAsync();
+	}
+}
