@@ -2,9 +2,9 @@ use crate::prelude::*;
 
 pub fn nav_menu_info() -> DrawerToggleInfo {
     DrawerToggleInfo::builder(
-        "Navigation Menu",
-        || html! {<i class="fa-solid fa-bars"></i>},
-        DynHtml::new(nav_menu_render),
+        |_| String::from("Navigation Menu"),
+        |_| html! {<i class="fa-solid fa-bars"></i>},
+        DynContextsHtml::new(nav_menu_render),
     )
     .set_button_class("btn toggle theme-inherit")
     .hide_header()
@@ -71,7 +71,7 @@ pub(crate) fn get_nav_routing() -> Vec<NavRoute> {
     nav_routes.to_owned()
 }
 
-fn nav_menu_render() -> Html {
+fn nav_menu_render(_contexts: Contexts) -> Html {
     html! {
         <>
             <Paper class="d-flex pa-1 justify-center">

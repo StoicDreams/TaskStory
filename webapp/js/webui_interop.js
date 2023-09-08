@@ -115,7 +115,7 @@ const memStorage = (function () {
             });
         }
         getItem(key) {
-            return memStorageCache[key];
+            return memStorageCache[key] ?? "";
         }
         acceptLocalStorage() {
             acceptedStorage = ACCEPT_LOCAL_STORAGE;
@@ -180,8 +180,13 @@ export function get_uuid() {
     }
 }
 
-export async function webui_fetch(url, jsonIn) {
+export async function webui_fetch(url, jsonIn, useCors) {
     let options = JSON.parse(jsonIn);
+    if (useCors) {
+        options.credentials = 'include';
+        options.mode = 'cors';
+        options.referrerPolicy = 'origin-when-cross-origin';
+    }
     let result = await fetch(url, options);
     let headers = result.headers;
     let status = result.status;
