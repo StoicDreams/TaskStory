@@ -18,16 +18,7 @@ let pageTransitionDuration = 300;
 export function push_state(path) {
     let cp = location.pathname.toLowerCase().split('?')[0].split('#')[0];
     if (path == cp) { return; }
-    let app = document.getElementById('app');
-    app.className = 'page transition out';
     history.pushState(null, null, path);
-    let halftran = pageTransitionDuration / 2;
-    setTimeout(() => {
-        app.className = 'page transition in';
-        setTimeout(() => {
-            app.className = '';
-        }, halftran);
-    }, halftran);
 }
 
 export function set_page_transition_duration(value) {
@@ -119,6 +110,7 @@ const memStorage = (function () {
         }
         acceptLocalStorage() {
             acceptedStorage = ACCEPT_LOCAL_STORAGE;
+            this.setItem(STORAGE_ACCEPTED_KEY, acceptedStorage);
             sessionStorage.clear();
             Object.keys(memStorageCache).forEach(key => {
                 localStorage.setItem(key, memStorageCache[key]);
@@ -126,6 +118,7 @@ const memStorage = (function () {
         }
         acceptSessionStorage() {
             acceptedStorage = ACCEPT_SESSION_STORAGE;
+            this.setItem(STORAGE_ACCEPTED_KEY, acceptedStorage);
             localStorage.clear();
             Object.keys(memStorageCache).forEach(key => {
                 sessionStorage.setItem(key, memStorageCache[key]);
@@ -133,6 +126,7 @@ const memStorage = (function () {
         }
         rejectCachedStorage() {
             acceptedStorage = REJECT_STORAGE_CACHING;
+            this.setItem(STORAGE_ACCEPTED_KEY, acceptedStorage);
             sessionStorage.clear();
             localStorage.clear();
         }
