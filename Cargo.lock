@@ -1496,11 +1496,10 @@ dependencies = [
 
 [[package]]
 name = "tracing"
-version = "0.1.37"
+version = "0.1.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ce8c33a8d48bd45d624a6e523445fd21ec13d3653cd51f681abf67418f54eb8"
+checksum = "ee2ef2af84856a50c1d430afce2fdded0a4ec7eda868db86409b4543df0797f9"
 dependencies = [
- "cfg-if",
  "pin-project-lite",
  "tracing-attributes",
  "tracing-core",
@@ -1519,9 +1518,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.31"
+version = "0.1.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0955b8137a1df6f1a2e9a37d8a6656291ff0297c1a97c24e0d8425fe2312f79a"
+checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
 ]
@@ -1651,7 +1650,7 @@ dependencies = [
 
 [[package]]
 name = "webapp"
-version = "0.6.52"
+version = "0.6.54"
 dependencies = [
  "webui",
  "yew",
@@ -1659,8 +1658,8 @@ dependencies = [
 
 [[package]]
 name = "webui"
-version = "0.6.52"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#6251c16b172915eb6a7bcca530fc92d07a488fd1"
+version = "0.6.54"
+source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#272db029313702e39cddcf51ef88f3ec80dcc1e2"
 dependencies = [
  "async-std",
  "chrono",
@@ -1686,8 +1685,8 @@ dependencies = [
 
 [[package]]
 name = "webui_procs"
-version = "0.6.52"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#6251c16b172915eb6a7bcca530fc92d07a488fd1"
+version = "0.6.54"
+source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#272db029313702e39cddcf51ef88f3ec80dcc1e2"
 
 [[package]]
 name = "winapi"
