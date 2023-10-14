@@ -1650,7 +1650,7 @@ dependencies = [
 
 [[package]]
 name = "webapp"
-version = "0.6.56"
+version = "0.6.57"
 dependencies = [
  "webui",
  "yew",
@@ -1658,8 +1658,8 @@ dependencies = [
 
 [[package]]
 name = "webui"
-version = "0.6.56"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#d892b77bb38c1b44935ab920fdd4c305068339c4"
+version = "0.6.57"
+source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#f1278a2c19bf6829c898c34154f40e2431d4bf76"
 dependencies = [
  "async-std",
  "chrono",
@@ -1685,8 +1685,8 @@ dependencies = [
 
 [[package]]
 name = "webui_procs"
-version = "0.6.56"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#d892b77bb38c1b44935ab920fdd4c305068339c4"
+version = "0.6.57"
+source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#f1278a2c19bf6829c898c34154f40e2431d4bf76"
 
 [[package]]
 name = "winapi"
