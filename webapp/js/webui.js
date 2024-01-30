@@ -12,7 +12,7 @@
                 }
                 const c = Date.now();
                 if (c - start > mswait) {
-                    reject(`Element ${sel} not found.`);
+                    resolve(null);
                     return;
                 }
                 setTimeout(check, 10);
@@ -35,9 +35,14 @@
         }
         let anchor = getMatchByKey(target, 'href');
         if (!anchor) { return false; }
+        let href = anchor.getAttribute('href');
+        href = href.substr(0, location.origin.length).toLowerCase() === location.origin.toLowerCase() ? href.substr(location.origin.length) : href;
+        if (href[0] === '#') {
+            location.hash = href;
+            return true;
+        }
         // Disabling local navigation which will be handled by PWA webasembly processing
-        if (anchor.href[0] === '/'
-            || anchor.href.substr(0, location.origin.length).toLowerCase() === location.origin.toLowerCase()) {
+        if (href[0] === '/') {
             return true;
         }
         return false;
@@ -100,5 +105,14 @@
             }, 300);
         }, 200);
     });
+    (function checkHighlighting(){
+        if (window.hljs) {
+            document.querySelectorAll('pre code:not([data-hl])').forEach((el) => {
+                el.setAttribute('data-hl', true);
+                window.hljs.highlightElement(el);
+            });
+        }
+        setTimeout(checkHighlighting, 100);
+    })();
 })();
 
