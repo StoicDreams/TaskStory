@@ -1794,7 +1794,7 @@ dependencies = [
 [[package]]
 name = "webui"
 version = "0.7.7"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#9e4569357a2cac616ac852469d880b0e9c0700a8"
+source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#aa3c9cd744fd96a367e9cd1a3c9cc2624a423aa7"
 dependencies = [
  "async-std",
  "chrono",
@@ -1822,7 +1822,7 @@ dependencies = [
 [[package]]
 name = "webui_procs"
 version = "0.7.7"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#9e4569357a2cac616ac852469d880b0e9c0700a8"
+source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#aa3c9cd744fd96a367e9cd1a3c9cc2624a423aa7"
 
 [[package]]
 name = "winapi"
