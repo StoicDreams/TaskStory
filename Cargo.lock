@@ -987,7 +987,8 @@ dependencies = [
 [[package]]
 name = "markdown"
 version = "1.0.0-alpha.16"
-source = "git+https://github.com/wooorm/markdown-rs#60db8e5896be05d23137a6bdb806e63519171f9e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b0f0025e8c0d89b84d6dc63e859475e40e8e82ab1a08be0a93ad5731513a508"
 dependencies = [
  "unicode-id",
 ]
@@ -1674,9 +1675,9 @@ checksum = "f00cc9702ca12d3c81455259621e676d0f7251cec66a21e98fe2e9a37db93b2a"
 
 [[package]]
 name = "value-bag"
-version = "1.6.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cdbaf5e132e593e9fc1de6a15bbec912395b11fb9719e061cf64f804524c503"
+checksum = "126e423afe2dd9ac52142e7e9d5ce4135d7e13776c529d27fd6bc49f19e3280b"
 
 [[package]]
 name = "version_check"
@@ -1785,7 +1786,7 @@ dependencies = [
 
 [[package]]
 name = "webapp"
-version = "0.7.7"
+version = "0.7.12"
 dependencies = [
  "webui",
  "yew",
@@ -1793,8 +1794,8 @@ dependencies = [
 
 [[package]]
 name = "webui"
-version = "0.7.7"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#aa3c9cd744fd96a367e9cd1a3c9cc2624a423aa7"
+version = "0.7.12"
+source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#1bd1b309d1cab1dfacd9d3f70def97da594c7ef1"
 dependencies = [
  "async-std",
  "chrono",
@@ -1821,8 +1822,9 @@ dependencies = [
 
 [[package]]
 name = "webui_procs"
-version = "0.7.7"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#aa3c9cd744fd96a367e9cd1a3c9cc2624a423aa7"
+version = "0.7.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baaded386ebd91bd415e431178cb392958aff65e2fdc4c8c42748a02e074262e"
 
 [[package]]
 name = "winapi"
