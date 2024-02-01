@@ -899,9 +899,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.2.1"
+version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "433de089bd45971eecf4668ee0ee8f4cec17db4f8bd8f7bc3197a6ce37aa7d9b"
+checksum = "824b2ae422412366ba479e8111fd301f7b5faece8149317bb81925979a53f520"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
@@ -1619,7 +1619,7 @@ version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a8534fd7f78b5405e860340ad6575217ce99f38d4d5c8f2442cb5ecb50090e1"
 dependencies = [
- "indexmap 2.2.1",
+ "indexmap 2.2.2",
  "toml_datetime",
  "winnow",
 ]
@@ -1786,7 +1786,7 @@ dependencies = [
 
 [[package]]
 name = "webapp"
-version = "0.7.15"
+version = "0.7.16"
 dependencies = [
  "webui",
  "yew",
@@ -1794,8 +1794,8 @@ dependencies = [
 
 [[package]]
 name = "webui"
-version = "0.7.15"
-source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#b013a7b7b577baa04a6abcc1073e42bb1c7554b8"
+version = "0.7.16"
+source = "git+https://github.com/StoicDreams/RustWebUI?branch=main#82e33da29e2673e3f065cefa29f8421906fb089c"
 dependencies = [
  "async-std",
  "chrono",
