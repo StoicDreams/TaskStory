@@ -1,6 +1,6 @@
 # Task Story
 
-[WebUI Version: 0.7.19](https://github.com/StoicDreams/RustWebUI)
+[WebUI Version: 0.7.20](https://github.com/StoicDreams/RustWebUI)
 
 Simple task management tool focused around Continuous Agile Software Engineering practices and methodologies.
 
