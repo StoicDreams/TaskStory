@@ -3,7 +3,7 @@ use crate::prelude::*;
 pub fn nav_menu_info() -> DrawerToggleInfo {
     DrawerToggleInfo::builder(
         |_| String::from("Navigation Menu"),
-        |_| html! {<i class="fa-solid fa-bars"></i>},
+        |_| html! {FaIcon::solid("bars").to_html()},
         DynContextsHtml::new(nav_menu_render),
     )
     .set_button_class("btn toggle theme-inherit")
@@ -18,18 +18,18 @@ pub(crate) fn get_nav_routing(_contexts: &Contexts) -> Vec<NavRoute> {
         NavLinkInfo::link(
             "Home",
             "/",
-            "fa-duotone fa-house",
+            &FaIcon::duotone("house"),
             roles::PUBLIC,
             page_index,
         ),
         NavGroupInfo::link(
             "Classes",
-            "fa-duotone fa-file-code",
+            &FaIcon::duotone("file-code"),
             roles::INVALID,
             vec![NavLinkInfo::link(
                 "Home",
                 "/agile-project-management",
-                "fa-duotone fa-house",
+                &FaIcon::duotone("house"),
                 roles::PUBLIC,
                 page_home,
             )],
@@ -37,32 +37,32 @@ pub(crate) fn get_nav_routing(_contexts: &Contexts) -> Vec<NavRoute> {
         NavLinkInfo::link(
             "About",
             "/about",
-            "fa-duotone fa-circle-info",
+            &FaIcon::duotone("circle-info"),
             roles::PUBLIC,
             page_about_stoic_dreams,
         ),
         NavLinkInfo::link(
             "Terms",
             "/terms",
-            "fa-duotone fa-handshake",
+            &FaIcon::duotone("handshake"),
             roles::PUBLIC,
             starter_page_terms,
         ),
         NavLinkInfo::link(
             "Privacy",
             "/privacy",
-            "fa-duotone fa-shield-exclamation",
+            &FaIcon::duotone("shield-exclamation"),
             roles::PUBLIC,
             starter_page_privacy,
         ),
         NavGroupInfo::link(
             "Hidden Nav",
-            "fa-acorn",
+            &FaIcon::solid("acorn"),
             roles::INVALID,
             vec![NavLinkInfo::link(
                 "Home",
                 "/",
-                "fa-duotone fa-fw fa-house",
+                &FaIcon::duotone("house"),
                 roles::PUBLIC,
                 page_index,
             )],
