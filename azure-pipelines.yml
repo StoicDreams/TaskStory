@@ -62,13 +62,13 @@ stages:
 
             # Build
             trunk build --release
-      - task: AzureCLI@2
-        displayName: 'Remove Old Files'
-        inputs:
-          azureSubscription: '$(azureSubscription)'
-          scriptType: pscore
-          scriptLocation: inlineScript
-          inlineScript: 'az storage blob delete-batch -s ''$web'' --account-name $(accountName)'
+      # - task: AzureCLI@2
+      #   displayName: 'Remove Old Files'
+      #   inputs:
+      #     azureSubscription: '$(azureSubscription)'
+      #     scriptType: pscore
+      #     scriptLocation: inlineScript
+      #     inlineScript: 'az storage blob delete-batch -s ''$web'' --account-name $(accountName)'
       - task: AzureCLI@2
         displayName: 'Copy Files to Azure Blob Storage'
         inputs:
@@ -168,13 +168,13 @@ stages:
 #          ArtifactName: 'drop'
 #          publishLocation: 'Container'
       # DEPLOYMENT
-      - task: AzureCLI@2
-        displayName: 'Remove Old Files'
-        inputs:
-          azureSubscription: '$(azureSubscription)'
-          scriptType: pscore
-          scriptLocation: inlineScript
-          inlineScript: 'az storage blob delete-batch -s ''$web'' --account-name $(accountName)'
+      # - task: AzureCLI@2
+      #   displayName: 'Remove Old Files'
+      #   inputs:
+      #     azureSubscription: '$(azureSubscription)'
+      #     scriptType: pscore
+      #     scriptLocation: inlineScript
+      #     inlineScript: 'az storage blob delete-batch -s ''$web'' --account-name $(accountName)'
       - task: AzureCLI@2
         displayName: 'Copy Files to Azure Blob Storage'
         inputs:
