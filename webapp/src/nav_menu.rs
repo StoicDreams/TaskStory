@@ -1,16 +1,14 @@
 use crate::prelude::*;
 
-pub fn nav_menu_info() -> DrawerToggleInfo {
-    DrawerToggleInfo::builder(
-        |_| String::from("Navigation Menu"),
-        |_| html! {FaIcon::solid("bars").to_html()},
-        DynContextsHtml::new(nav_menu_render),
-    )
-    .set_button_class("btn toggle theme-inherit")
-    .hide_header()
-    .hide_footer()
-    .set_drawer(Direction::Left)
-    .build()
+pub fn nav_content(contexts: &Contexts) -> Html {
+    html! {
+        <>
+            <webui-flex justify="center" slot="header">
+                <webui-stoic-dreams-logo title="Task Story Logo" text="Task" text2="Story"></webui-stoic-dreams-logo>
+            </webui-flex>
+            <NavDisplay routes={get_nav_routing(contexts)} class="d-flex flex-column pa-1" />
+        </>
+    }
 }
 
 pub(crate) fn get_nav_routing(_contexts: &Contexts) -> Vec<NavRoute> {
@@ -69,15 +67,4 @@ pub(crate) fn get_nav_routing(_contexts: &Contexts) -> Vec<NavRoute> {
         ),
     ];
     nav_routes.to_owned()
-}
-
-fn nav_menu_render(contexts: &Contexts) -> Html {
-    html! {
-        <>
-            <Paper class="logo d-flex pa-1 justify-center ml-a mr-a">
-                <AppLogo text="Task" second="Story" />
-            </Paper>
-            <NavDisplay routes={get_nav_routing(contexts)} class="d-flex flex-column pa-1" />
-        </>
-    }
 }
