@@ -40,13 +40,13 @@
 
 <body>
 	<webui-app data-removeclass=".nav|open;.shared|open">
-		<webui-drawer slot="left" class="nav elevation-20" data-state="slot|fixed" data-moveable data-dockable>
+		<webui-drawer slot="left" class="nav elevation-20" data-state="slot|docked" data-moveable data-dockable>
 			<webui-flex justify="center" slot="header">
 				<webui-stoic-dreams-logo title="Task Story Logo" text="Task" text2="Story"></webui-stoic-dreams-logo>
 			</webui-flex>
 			<webui-nav routes="/nav.json" data-subscribe="nav-routes"></webui-nav>
 		</webui-drawer>
-		<webui-drawer slot="right" class="shared elevation-20" data-stopclick data-moveable data-state="slot|fixed" fixed>
+		<webui-drawer slot="right" class="shared elevation-20" data-stopclick data-moveable data-state="slot">
 		</webui-drawer>
 		<header slot="header">
 			<button data-toggleclass=".nav|open" class="elevation-10 pa-1 mx-1">
