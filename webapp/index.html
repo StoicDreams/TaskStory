@@ -57,7 +57,6 @@
 			<h1 data-subscribe="page-title" data-set="innerHTML">Task Story</h1>
 			<h2 data-subscribe="page-subtitle" data-set="innerHTML"></h2>
 			<webui-flex grow></webui-flex>
-			<webui-stoic-social-links></webui-stoic-social-links>
 			<webui-feedback title="Provide us your feedback" data-post="https://api.myfi.ws/feedback/new" data-json-name="message">
 				<p>You can also come <a href="https://discord.com/channels/972856291909332993/1025781071608037466">chat with us on the Stoic Dreams discord server.</a></p>
 			</webui-feedback>
@@ -68,7 +67,16 @@
 		<webui-data data-app-name="Task Story"></webui-data>
 		<webui-data data-company-possessive="Stoic Dreams'"></webui-data>
 		<webui-data data-company-singular="Stoic Dreams"></webui-data>
-		<webui-page-footer copyright="2016" company="Stoic Dreams"></webui-page-footer>
+		<webui-page-footer copyright="2016" company="Stoic Dreams">
+			<webui-next-page theme="tertiary" family="duotone" data-subscribe="page-next-page"></webui-next-page>
+			<webui-flex class="my-3" justify="center">
+				<webui-link href="/about" icon="circle-exclamation" family="duotone">About {APP_NAME}</webui-link>
+				<webui-link href="/contact" icon="messages" family="duotone">Contact {APP_NAME}</webui-link>
+				<webui-link href="/privacy" icon="shield-exclamation" family="duotone">Privacy</webui-link>
+				<webui-link href="/terms" icon="handshake" family="duotone">Terms & Conditions</webui-link>
+			</webui-flex>
+			<webui-stoic-social-links class="mb-2"></webui-stoic-social-links>
+		</webui-page-footer>
 	</webui-app>
 
 	<script src="https://cdn.myfi.ws/highlight/highlight.min.js" async></script>

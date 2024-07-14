@@ -4,29 +4,5 @@
         "icon": "house",
         "iconFamily": "duotone",
         "url": "/"
-    },
-    {
-        "name": "About",
-        "icon": "circle-exclamation",
-        "iconFamily": "duotone",
-        "url": "/about"
-    },
-    {
-        "name": "Privacy",
-        "icon": "shield-exclamation",
-        "iconFamily": "duotone",
-        "url": "/privacy"
-    },
-    {
-        "name": "Terms",
-        "icon": "handshake",
-        "iconFamily": "duotone",
-        "url": "/terms"
-    },
-    {
-        "name": "Contact",
-        "icon": "messages",
-        "iconFamily": "duotone",
-        "url": "/contact"
     }
 ]
