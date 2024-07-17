@@ -1,4 +1,5 @@
 :root {
+	--fa-default-family: duotone;
 	--color-black: #101010;
 	--color-white: #FFFFFF;
 	--site-background-color: #333333;
@@ -19,7 +20,7 @@
 	--color-warning-offset: var(--color-white);
 	--color-danger: rgb(183, 5, 5);
 	--color-danger-offset: var(--color-white);
-	--color-shade: rgba(125,125,125,0.2);
+	--color-shade: rgba(125, 125, 125, 0.2);
 	--color-active: var(--color-info);
 	--color-active-offset: var(--color-info-offset);
 	--color-button: var(--color-info);

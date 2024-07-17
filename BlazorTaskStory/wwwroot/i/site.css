@@ -1,15 +1,16 @@
 ﻿:root {
+	--fa-default-family: duotone;
 	--primary-dark: #2730d1;
-	--primary-glass: rgba(39,48,209,0.7);
+	--primary-glass: rgba(39, 48, 209, 0.7);
 	--primary-light: #dfe2b9;
 	--splash-primary: #2730d1;
-	--splash-glass: rgba(39,48,209,0.7);
+	--splash-glass: rgba(39, 48, 209, 0.7);
 	--splash-secondary: #dfe2b9;
 	--color-dark: #333;
 	--color-light: #FFF;
 	--color-link: #c0ffff;
-	--glass-dark: rgba(0,0,0,0.7);
-	--glass-light: rgba(255,255,255,0.7);
+	--glass-dark: rgba(0, 0, 0, 0.7);
+	--glass-light: rgba(255, 255, 255, 0.7);
 	--primary-page: #dfe2b9;
 	--color-page: #333;
 }
