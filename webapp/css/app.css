@@ -2,8 +2,8 @@
 	--fa-default-family: duotone;
 	--color-black: #101010;
 	--color-white: #FFFFFF;
-	--site-background-color: #333333;
-	--site-background-offset: var(--color-white);
+	--color-background: #333333;
+	--color-background-offset: var(--color-white);
 	--color-title: #d14d06;
 	--color-title-offset: var(--color-white);
 	--color-primary: #d9620c;
@@ -20,7 +20,6 @@
 	--color-warning-offset: var(--color-white);
 	--color-danger: rgb(183, 5, 5);
 	--color-danger-offset: var(--color-white);
-	--color-shade: rgba(125, 125, 125, 0.2);
 	--color-active: var(--color-info);
 	--color-active-offset: var(--color-info-offset);
 	--color-button: var(--color-info);
