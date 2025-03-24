@@ -1153,15 +1153,15 @@ dependencies = [
 
 [[package]]
 name = "webapp"
-version = "0.10.10"
+version = "0.10.11"
 dependencies = [
  "webui",
 ]
 
 [[package]]
 name = "webui"
-version = "0.10.10"
-source = "git+https://github.com/StoicDreams/WebUI?branch=main#d9adec4ca432c6856f6cc074e655025b674e721a"
+version = "0.10.11"
+source = "git+https://github.com/StoicDreams/WebUI?branch=main#4f62a3bf247f0da8e52ce0f42384a127a55d27eb"
 dependencies = [
  "async-std",
  "chrono",
