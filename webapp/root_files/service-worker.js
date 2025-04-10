@@ -11,9 +11,9 @@ function get_uuid() {
 		});
 	}
 }
-const currentVersion = location.host.startsWith('localhost') ? `${get_uuid()}` : 'webui_0.10.11';
-const cacheNamePrefix = 'offline-cache-';
-const cacheName = `${cacheNamePrefix}${currentVersion}_ts_2504082207`;
+const cacheNamePrefix = 'offline-cache';
+const cachePostfix = location.host.startsWith('localhost') ? `_${get_uuid()}` : '_ts_2504101232';
+const cacheName = `${cacheNamePrefix}${cachePostfix}`;
 const offlineAssetsInclude = [/\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/];
 const offlineAssetsExclude = [/^service-worker\.js$/];
 
