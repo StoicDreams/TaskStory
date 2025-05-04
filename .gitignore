@@ -1,26 +1,10 @@
-# Ignore IDE files
-.vs
-.idea
-*.lutconfig
-*.coverage
+# Ignore IDE Files
+.idea/
 
-# Ignore build files
-bin
-obj
-temp
-*.exe
-*.dll
+# Ignore Build Folders
 target
 dist
-*.profraw
+pkg
 
-# Ignore NCrunch files
-*ncrunch*
-*.cache
-
-# Ignore User files
-*.User
-*.local.*
-*.pubxml
-desktop.ini
-*.DS_Store
+# Ignore Legacy Files
+.legacy

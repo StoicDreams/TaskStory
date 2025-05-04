@@ -12,7 +12,7 @@ function get_uuid() {
 	}
 }
 const cacheNamePrefix = 'offline-cache';
-const cachePostfix = location.host.startsWith('localhost') ? `_${get_uuid()}` : '_ts_2504261243';
+const cachePostfix = location.host.startsWith('localhost') ? `_${get_uuid()}` : '_ts_2505042157';
 const cacheName = `${cacheNamePrefix}${cachePostfix}`;
 const offlineAssetsInclude = [/\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/];
 const offlineAssetsExclude = [/^service-worker\.js$/];
