@@ -23,8 +23,8 @@
 
 	<link rel="dns-prefetch" href="https://cdn.myfi.ws" />
 	<link rel="dns-prefetch" href="https://api.myfi.ws" />
-    <link href="https://cdn.myfi.ws/css/webui.min.css" rel="preload" as="style" />
-    <link href="https://cdn.myfi.ws/webui/loader.min.js" rel="preload" as="script" />
+	<link href="https://cdn.myfi.ws/css/webui.min.css" rel="preload" as="style" />
+	<link href="https://cdn.myfi.ws/webui/loader.min.js" rel="preload" as="script" />
 
 	<link href="Logo.svg" rel="icon" type="image/svg+xml" sizes="any" />
 	<link rel="manifest" href="app.webmanifest">
@@ -36,12 +36,12 @@
 	<link data-trunk href="root_files" rel="copy-dir" />
 	<link data-trunk href="d" rel="copy-dir" data-target-path="d" />
 	<link data-trunk href="wc" rel="copy-dir" data-target-path="wc" />
-    <link data-trunk href="pkg" rel="copy-dir" data-target-path="/" />
+	<link data-trunk href="pkg" rel="copy-dir" data-target-path="/" />
 
-    <!--Web Worker-->
-    <script data-trunk type="module" src="src-js/main.js"></script>
-    <link data-trunk href="src-js/worker.js" rel="copy-file" data-target-path="/" />
-    <!--End Web Worker-->
+	<!--Web Worker-->
+	<script data-trunk type="module" src="src-js/main.js"></script>
+	<link data-trunk href="src-js/worker.js" rel="copy-file" data-target-path="/" />
+	<!--End Web Worker-->
 
 	<meta name="theme-color" content="#FF2E46" />
 
@@ -82,7 +82,11 @@
 				<p>You can also come <a href="https://discord.com/channels/972856291909332993/1025781071608037466">chat with us on the Stoic Dreams discord server.</a></p>
 			</webui-feedback>
 			<webui-alerts title="View your notifications" data-title="My Alerts" data-toggleclass=".shared|open"></webui-alerts>
-			<webui-myfi-info></webui-myfi-info>
+			<webui-myfi-info>
+				<template slot="panel-content">
+					<webui-alert show variant="info">Example Account Panel</webui-alert>
+				</template>
+			</webui-myfi-info>
 		</header>
 		<noscript>Javascript is required to view this site</noscript>
 		<webui-page-footer copyright="2016" company="Stoic Dreams">
