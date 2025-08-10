@@ -2,7 +2,7 @@
 
 [Version: 0.1.4](https://github.com/StoicDreams/TaskStory)
 
-[WebUI Version: 0.11.2](https://github.com/StoicDreams/WebUI)
+[WebUI Version: 0.11.3](https://github.com/StoicDreams/WebUI)
 
 Simple task management tool focused around Continuous Agile Software Engineering practices and methodologies.
 
