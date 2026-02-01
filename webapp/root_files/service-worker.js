@@ -12,7 +12,7 @@ function get_uuid() {
 	}
 }
 const cacheNamePrefix = 'offline-cache';
-const cachePostfix = location.host.startsWith('localhost') ? `_${get_uuid()}` : '_ts_2601141917';
+const cachePostfix = location.host.startsWith('localhost') ? `_${get_uuid()}` : '_ts_2602012238';
 const cacheName = `${cacheNamePrefix}${cachePostfix}`;
 const cdnCacheTimestamps = new Map();
 const CACHE_REFRESH_INTERVAL = 60 * 60 * 1000;
