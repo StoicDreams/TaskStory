@@ -7,7 +7,7 @@ self.addEventListener('fetch', event => {
         url.protocol === 'tauri:' ||
         url.hostname === 'ipc.localhost' ||
         url.hostname === 'tauri.localhost' ||
-        url.hostname === '127.0.0.1' ||
+        url.hostname.startsWith('127') ||
         url.hostname === 'localhost'
     ) {
         return;
@@ -16,9 +16,6 @@ self.addEventListener('fetch', event => {
         return;
     }
     if (!allowCache(event.request)) {
-        return;
-    }
-    if (!urlNeedsCaching(event.request.url)) {
         return;
     }
     event.respondWith(onFetch(event))
@@ -39,10 +36,10 @@ async function onActivate(event) {
 async function onFetch(event) {
     let request = applyCacheBusting(event.request);
     const cache = await caches.open(cacheName);
-    const cachedResponse = await cache.match(request);
+    const cachedResponse = await cache.match(event.request);
     const networkFetchPromise = fetch(request).then(networkResponse => {
         if (networkResponse && networkResponse.ok) {
-            cache.put(request, networkResponse.clone());
+            cache.put(event.request, networkResponse.clone());
         }
         return networkResponse;
     }).catch(error => {
@@ -53,11 +50,6 @@ async function onFetch(event) {
         return cachedResponse;
     }
     return networkFetchPromise;
-}
-function urlNeedsCaching(url) {
-    if (url.startsWith('https://cdn.myfi.ws')) return false;
-    if (url.startsWith('http://127.0.0.1:1426')) return false;
-    return true;
 }
 function applyCacheBusting(request) {
     try {
