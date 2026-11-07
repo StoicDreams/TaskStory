@@ -220,3 +220,63 @@ export async function undefinedComponents(page) {
         return [...tags].filter(tag => !customElements.get(tag)).sort();
     });
 }
+
+/** The custom properties set in a stylesheet's :root block. */
+export function themeVariables(css) {
+    const block = css.match(/:root\s*\{([\s\S]*?)\}/);
+    const vars = {};
+    // Minified CSS leaves out the last semicolon, so a declaration can also end the block.
+    if (block) for (const m of block[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+?)\s*(?:;|$)/g)) vars[m[1]] = m[2].trim();
+    return vars;
+}
+
+/** A theme value in one standard form, so a minifier writing #fff for #FFFFFF still matches. */
+export function normalizeThemeValue(value) {
+    const color = colorToRgb(value.trim());
+    if (color) return `rgba(${color.rgb.join(',')},${+color.alpha.toFixed(3)})`;
+    return value.replace(/\s+/g, '').toLowerCase();
+}
+
+function colorToRgb(value) {
+    let m = value.match(/^#([0-9a-f]{3})$/i);
+    if (m) return { rgb: [...m[1]].map(c => parseInt(c + c, 16)), alpha: 1 };
+    m = value.match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
+    if (m) return { rgb: [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16)), alpha: m[2] ? parseInt(m[2], 16) / 255 : 1 };
+    m = value.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)$/i);
+    if (m) return { rgb: m.slice(1, 4).map(Number), alpha: m[4] === undefined ? 1 : parseFloat(m[4]) };
+    return null;
+}
+
+/** WCAG contrast ratio between two colors given as [r, g, b]. */
+export function contrastRatio(a, b) {
+    const lum = rgb => {
+        const c = rgb.map(v => v / 255).map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+    return (x + 0.05) / (y + 0.05);
+}
+
+/**
+ * Theme colors in webapp/css/app.css whose -offset text color is under 4.5:1 against them, the WCAG AA level
+ * for normal text. Colors that are see-through, or that this file cannot resolve on its own, are skipped.
+ */
+export function themeContrastProblems() {
+    const file = join(WEBAPP, 'css', 'app.css');
+    if (!existsSync(file)) return [];
+    const vars = themeVariables(readFileSync(file, 'utf8'));
+    const resolve = (value, depth = 0) => {
+        const m = value && value.match(/^var\((--[\w-]+)\s*(?:,\s*(.+))?\)$/);
+        if (!m) return value;
+        return depth > 10 ? null : resolve(vars[m[1]] ?? m[2], depth + 1);
+    };
+    const problems = [];
+    for (const key of Object.keys(vars).filter(k => k.startsWith('--color-') && !k.endsWith('-offset'))) {
+        if (!vars[`${key}-offset`]) continue;
+        const bg = colorToRgb(resolve(vars[key]) || ''), fg = colorToRgb(resolve(vars[`${key}-offset`]) || '');
+        if (!bg || !fg || bg.alpha < 1) continue;
+        const ratio = contrastRatio(bg.rgb, fg.rgb);
+        if (ratio < 4.5) problems.push(`${key} (${vars[key]}) with ${key}-offset: ${ratio.toFixed(2)}:1`);
+    }
+    return problems;
+}

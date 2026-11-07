@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import {
     test, expect, openPage, undefinedComponents,
     WEBAPP, ROOT_FILES, readJson, readText, siteOrigin, pageFiles, routeToFile, navRoutes, sitemapUrls,
-    siteRoutes, isDynamicRoute, resolveSiteFile, relativeToSite,
+    siteRoutes, isDynamicRoute, resolveSiteFile, relativeToSite, themeVariables, themeContrastProblems, normalizeThemeValue,
 } from './support/site.mjs';
 import config from './site.config.mjs';
 
@@ -66,6 +66,19 @@ test.describe('site files', () => {
             }
         }
         expect(broken).toEqual([]);
+    });
+
+    test('theme colors are readable with their text colors', () => {
+        // Text on a theme color, such as a button or alert, needs 4.5:1 contrast (WCAG AA) to be readable.
+        expect(themeContrastProblems(), 'Darken the color, or give it dark text, in webapp/css/app.css').toEqual([]);
+    });
+
+    test('app.min.css has the same theme colors as app.css', () => {
+        const source = join(WEBAPP, 'css', 'app.css'), min = join(WEBAPP, 'css', 'app.min.css');
+        if (!existsSync(source) || !existsSync(min)) return;
+        const normalize = vars => Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, normalizeThemeValue(v)]));
+        expect(normalize(themeVariables(readText(min))), 'Regenerate with: esbuild --minify --legal-comments=inline app.css --outfile=app.min.css')
+            .toEqual(normalize(themeVariables(readText(source))));
     });
 
     test('every component source file has a min file', () => {
