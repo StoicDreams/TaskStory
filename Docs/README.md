@@ -1,6 +1,6 @@
 # Task Story
 
-[Version: 0.1.10](https://github.com/StoicDreams/TaskStory)
+[Version: 0.1.11](https://github.com/StoicDreams/TaskStory)
 
 [WebUI](https://github.com/StoicDreams/WebUI)
 

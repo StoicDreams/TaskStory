@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
     test, expect, openPage, undefinedComponents,
     WEBAPP, ROOT_FILES, readJson, readText, siteOrigin, pageFiles, routeToFile, navRoutes, sitemapUrls,
@@ -77,7 +78,7 @@ test.describe('site files', () => {
         const source = join(WEBAPP, 'css', 'app.css'), min = join(WEBAPP, 'css', 'app.min.css');
         if (!existsSync(source) || !existsSync(min)) return;
         const normalize = vars => Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, normalizeThemeValue(v)]));
-        expect(normalize(themeVariables(readText(min))), 'Regenerate with: esbuild --minify --legal-comments=inline app.css --outfile=app.min.css')
+        expect(normalize(themeVariables(readText(min))), 'Regenerate with: pwsh ./PowerShell/Minify.ps1')
             .toEqual(normalize(themeVariables(readText(source))));
     });
 
@@ -85,7 +86,18 @@ test.describe('site files', () => {
         const wc = join(WEBAPP, 'wc');
         const sources = existsSync(wc) ? readdirSync(wc).filter(name => name.endsWith('.js') && !name.endsWith('.min.js')) : [];
         const missing = sources.filter(name => !existsSync(join(wc, name.replace(/\.js$/, '.min.js'))));
-        expect(missing, 'Regenerate with: esbuild --minify --legal-comments=inline name.js --outfile=name.min.js').toEqual([]);
+        expect(missing, 'Regenerate with: pwsh ./PowerShell/Minify.ps1').toEqual([]);
+    });
+
+    test('every site component is named in a spec file', () => {
+        // A component counts as tested when a spec other than this one names its tag, such as app-search.
+        const wc = join(WEBAPP, 'wc');
+        const components = existsSync(wc) ? readdirSync(wc).filter(name => name.endsWith('.js') && !name.endsWith('.min.js')).map(name => name.replace(/\.js$/, '')) : [];
+        const testsDir = dirname(fileURLToPath(import.meta.url));
+        const specs = readdirSync(testsDir).filter(name => name.endsWith('.spec.mjs') && name !== 'site.spec.mjs')
+            .map(name => readText(join(testsDir, name))).join('\n');
+        const missing = components.filter(name => !specs.includes(`app-${name}`));
+        expect(missing, 'Add tests for these components in a spec file of their own').toEqual([]);
     });
 });
 
