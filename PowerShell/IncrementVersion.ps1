@@ -87,6 +87,8 @@ if ($null -ne $version) {
 
     ApplyVersionUpdates .\ Cargo.toml 'version = "([0-9\.]+)"' "version = ""$version"""
     ApplyVersionUpdates .\Docs README.md '\[Version: ([0-9\.]+)\]' "[Version: $version]"
+    ApplyVersionUpdates .\webapp\root_files service-worker.js "const currentVersion = '([0-9\.]+)'" "const currentVersion = '$version'"
+    ApplyVersionUpdates .\webapp\root_files service-worker.min.js 'currentVersion="([0-9\.]+)"' "currentVersion=""$version"""
 }
 else {
     Write-Host Current version was not found -ForegroundColor Red

@@ -20,9 +20,9 @@ self.addEventListener('fetch', event => {
     }
     event.respondWith(onFetch(event))
 });
-const cachePostfix = location.host.startsWith('localhost') ? `${Date.now()}` : (new Date()).toISOString().split('T')[0].replace(/-/g, '');
+const currentVersion = '0.1.10';
 const cacheNamePrefix = 'offline-cache-';
-const cacheName = `${cacheNamePrefix}${cachePostfix}`;
+const cacheName = `${cacheNamePrefix}${currentVersion}`;
 async function onInstall(event) {
     self.skipWaiting();
 }
@@ -54,7 +54,7 @@ async function onFetch(event) {
 function applyCacheBusting(request) {
     try {
         const url = new URL(request.url);
-        url.searchParams.set('_', cacheName);
+        url.searchParams.set('_', Date.now());
         return new Request(url.toString(), request);
     } catch {
         return request;

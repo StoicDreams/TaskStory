@@ -10,5 +10,11 @@
     "icon": "emoji-balance_scale",
     "url": "/66fa2d9b-f193-4ba3-84f6-631b08cf2612",
     "children": null
+  },
+  {
+    "name": "Release",
+    "icon": "emoji-package",
+    "url": "/29ceb1d6-bf2c-4b48-a332-bf1dec964fd6",
+    "children": null
   }
 ]
