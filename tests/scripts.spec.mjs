@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { spawnSync, execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -129,6 +129,46 @@ if ($env:PUBLISH_THROW -eq '${name}') { throw '${name} broke' }
         const result = publish(['-SkipTests'], {}, packageJson({ test: logLine('npm-test') }));
         expect(result.code, result.output).toBe(0);
         expect(result.ran).toEqual(steps);
+    });
+
+    // A stand-in wasm-pack, first on the PATH, that logs its arguments and folder, or fails.
+    function fakeWasmPack() {
+        const bin = join(tempFolder(), 'bin');
+        write(bin, 'wasm-pack', '#!/bin/sh\necho "wasm-pack $* in=$(pwd)" >> "$PUBLISH_LOG"\n[ "$PUBLISH_FAIL" = "wasm-pack" ] && exit 4\nexit 0\n');
+        chmodSync(join(bin, 'wasm-pack'), 0o755);
+        write(bin, 'wasm-pack.cmd', '@echo wasm-pack %* in=%CD%>> "%PUBLISH_LOG%"\r\n@if "%PUBLISH_FAIL%"=="wasm-pack" exit /b 4\r\n@exit /b 0\r\n');
+        const pathKey = Object.keys(process.env).find(key => key.toUpperCase() === 'PATH') || 'PATH';
+        return { [pathKey]: bin + (process.platform === 'win32' ? ';' : ':') + process.env[pathKey] };
+    }
+    const workerTool = { 'webapp/wc/tool.js': 'webui.worker.run_tool();' };
+
+    test('builds webapp/pkg with wasm-pack before the UI tests when a component calls webui.worker', () => {
+        const result = publish([], fakeWasmPack(), { ...packageJson({ test: logLine('npm-test') }), ...workerTool });
+        expect(result.code, result.output).toBe(0);
+        expect(result.ran).toEqual([...steps, 'wasm-pack', 'npm-test']);
+        const build = result.lines.find(line => line.startsWith('wasm-pack'));
+        expect(build).toContain('build --target web --out-dir pkg');
+        expect(build).toContain(`in=${join(result.dir, 'webapp')}`);
+    });
+
+    test('does not build webapp/pkg when only min files, or no components, call webui.worker', () => {
+        const minOnly = publish([], fakeWasmPack(), {
+            ...packageJson({ test: logLine('npm-test') }),
+            'webapp/wc/tool.js': 'webui.alert("no worker here");',
+            'webapp/wc/old.min.js': 'webui.worker.run_tool();',
+        });
+        expect(minOnly.code, minOnly.output).toBe(0);
+        expect(minOnly.ran).toEqual([...steps, 'npm-test']);
+        const noComponents = publish([], fakeWasmPack(), packageJson({ test: logLine('npm-test') }));
+        expect(noComponents.ran).toEqual([...steps, 'npm-test']);
+    });
+
+    test('a failed worker build stops Publish before the UI tests', () => {
+        const result = publish([], { ...fakeWasmPack(), PUBLISH_FAIL: 'wasm-pack' }, { ...packageJson({ test: logLine('npm-test') }), ...workerTool });
+        expect(result.code).not.toBe(0);
+        expect(result.ran).toEqual([...steps, 'wasm-pack']);
+        expect(result.output).toContain('Build the Rust worker for the UI tests failed');
+        expect(result.output).not.toContain('Ready to commit.');
     });
 });
 

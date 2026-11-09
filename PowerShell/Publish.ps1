@@ -48,6 +48,28 @@ function Invoke-Check([string]$Name, [scriptblock]$Command) {
     if ($LASTEXITCODE) { throw "$Name failed with exit code $LASTEXITCODE." }
 }
 
+# Components that call webui.worker load the Rust code from webapp/pkg in the UI tests.
+function Test-UsesWorker {
+    if (-not (Test-Path 'webapp/wc')) { return $false }
+    $sources = Get-ChildItem 'webapp/wc' -Filter '*.js' -Recurse | Where-Object { $_.Name -notlike '*.min.js' }
+    return [bool]($sources | Select-String -Pattern 'webui.worker' -SimpleMatch -List)
+}
+
+# webapp/pkg is not committed, so the deploy workflow builds it fresh before the UI tests. Build it here too, so an
+# old local copy can't pass tests that fail in CI, and a missing one fails here instead of after the push.
+function Build-Worker {
+    if (-not (Get-Command wasm-pack -ErrorAction SilentlyContinue)) {
+        throw 'The UI tests need webapp/pkg, which is built with wasm-pack. Install it with: cargo install wasm-pack'
+    }
+    Push-Location 'webapp'
+    try {
+        Invoke-Check 'Build the Rust worker for the UI tests' { wasm-pack build --target web --out-dir pkg }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 # The same tests the deploy workflow runs, found from the project, so a push that would fail CI is caught here first.
 function Invoke-Tests {
     if (Test-Path 'src-tauri') {
@@ -60,6 +82,7 @@ function Invoke-Tests {
     }
     if (Test-Path 'package.json') {
         if (-not (Test-Path 'node_modules') -and (Test-Path 'package-lock.json')) { Invoke-Check 'Install the test tools' { npm ci } }
+        if (Test-UsesWorker) { Build-Worker }
         $scripts = (Get-Content 'package.json' -Raw | ConvertFrom-Json).scripts
         # Playwright reads CI, which turns on the same retries and checks the deploy workflow gets.
         $previousCI = $env:CI
