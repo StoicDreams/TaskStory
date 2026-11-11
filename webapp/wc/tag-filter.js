@@ -2,6 +2,7 @@
  * Every item manager on the page shows only items that have all the filter's tags.
  * Adding a prefixed tag (problem:, project:, ...) replaces any filter tag with the same prefix.
  * Quick filters list matching tags from the current items as toggle buttons. Team and Project list all their tags when empty.
+ * The filter is one line; the quick filter boxes open with "More filters".
  */
 "use strict"
 {
@@ -49,20 +50,12 @@
             const ts = window.taskStory;
             const frag = document.createDocumentFragment();
             const paper = webui.create('webui-paper', { elevation: '5', class: 'mb-3' });
-            const head = webui.create('webui-flex', { theme: 'info', class: 'pa-2', align: 'center', wrap: '', gap: '2' });
-            head.appendChild(webui.create('h2', { class: 'my-0', text: 'Tag Filters' }));
-            head.appendChild(webui.create('webui-flex', { grow: '' }));
-            head.appendChild(webui.create('span', { text: 'Bug / Blocked Toggles:' }));
-            t._bug = webui.create('webui-button', { 'start-icon': 'bug', text: 'Bug' });
-            t._bug.addEventListener('click', () => ts.filter.toggle('bug'));
-            t._blocked = webui.create('webui-button', { 'start-icon': 'stop', text: 'Blocked' });
-            t._blocked.addEventListener('click', () => ts.filter.toggle('blocked'));
-            head.appendChild(t._bug);
-            head.appendChild(t._blocked);
-            paper.appendChild(head);
-
-            const body = webui.create('webui-flex', { column: '', gap: '2', class: 'pa-2' });
-            t._input = webui.create('app-tag-input', { label: 'Custom Tags', helper: 'Type in name of tag and press enter to add' });
+            // One line: the filter's own tags, the quick tag toggles, Bug and Blocked. The quick filter boxes wait behind "More filters".
+            const bar = webui.create('webui-flex', { class: 'pa-2', align: 'center', wrap: '', gap: '2' });
+            const title = webui.create('h2', { class: 'my-0', text: 'Filter' });
+            title.style.fontSize = '1.25em';
+            bar.appendChild(title);
+            t._input = webui.create('app-tag-input', { placeholder: 'Filter by tag, then press Enter' });
             t._input.addEventListener('tag-add', ev => {
                 ev.preventDefault();
                 ts.filter.add(ev.detail.tag);
@@ -71,10 +64,23 @@
                 ev.preventDefault();
                 ts.filter.remove(ev.detail.tag);
             });
-            body.appendChild(t._input);
+            bar.appendChild(t._input);
+            t._toggles = webui.create('webui-flex', { wrap: '', gap: '1', align: 'center', grow: '', role: 'group', 'aria-label': 'Quick tag toggles' });
+            bar.appendChild(t._toggles);
+            t._bug = webui.create('webui-button', { 'start-icon': 'bug', text: 'Bug' });
+            t._bug.addEventListener('click', () => ts.filter.toggle('bug'));
+            t._blocked = webui.create('webui-button', { 'start-icon': 'stop', text: 'Blocked' });
+            t._blocked.addEventListener('click', () => ts.filter.toggle('blocked'));
+            bar.appendChild(t._bug);
+            bar.appendChild(t._blocked);
+            t._moreButton = webui.create('webui-button', { theme: 'shade', 'start-icon': 'sliders', text: 'More filters', 'aria-controls': `tag-filter-more-${webui.uuid()}` });
+            t._moreButton.addEventListener('click', () => t.showMore(!t._moreOpen));
+            bar.appendChild(t._moreButton);
+            paper.appendChild(bar);
 
+            t._more = webui.create('webui-flex', { id: t._moreButton.getAttribute('aria-controls'), column: '', gap: '1', class: 'pa-2' });
+            t._more.appendChild(webui.create('span', { class: 'f-small', text: 'Quick filters choose which tags show as toggles. Team and Project show all their tags when empty.' }));
             const quickRow = webui.create('webui-flex', { wrap: '', gap: '2', align: 'flex-end' });
-            quickRow.appendChild(webui.create('span', { class: 'f-small', text: 'Quick Filters show matching tags as toggles below. Team and Project show all their tags when empty.' }));
             const quick = ts.filter.quick();
             t._quickInputs = {};
             quickFilters.forEach(q => {
@@ -88,17 +94,21 @@
                 t._quickInputs[q.key] = input;
                 quickRow.appendChild(input);
             });
-            body.appendChild(quickRow);
-
-            const toggleRow = webui.create('webui-flex', { wrap: '', gap: '1', align: 'center' });
-            toggleRow.appendChild(webui.create('span', { text: 'Quick Tag Toggles:' }));
-            t._toggles = webui.create('webui-flex', { wrap: '', gap: '1', align: 'center' });
-            toggleRow.appendChild(t._toggles);
-            body.appendChild(toggleRow);
-            paper.appendChild(body);
+            t._more.appendChild(quickRow);
+            paper.appendChild(t._more);
+            // Open when a quick filter is already in use, so its effect is explained.
+            t.showMore(Object.values(quick).some(Boolean));
             frag.appendChild(paper);
             t.appendChild(frag);
             t.render();
+        },
+        showMore(open) {
+            const t = this;
+            // webui-flex sets its own display, so the hidden attribute would not hide it.
+            t._moreOpen = !!open;
+            t._more.style.display = open ? '' : 'none';
+            t._moreButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+            t._moreButton.setAttribute('theme', open ? 'info' : 'shade');
         },
         async refresh() {
             const t = this;
@@ -141,7 +151,6 @@
                 btn.addEventListener('click', () => ts.filter.toggle(tag));
                 frag.appendChild(btn);
             });
-            if (!list.length) frag.appendChild(webui.create('span', { class: 'f-small', text: 'None' }));
             t._toggles.replaceChildren(frag);
         }
     });

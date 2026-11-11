@@ -113,7 +113,12 @@
             } else if (view === 'manager') {
                 els.push(webui.create('app-tag-filter'));
                 els.push(webui.create('app-item-manager', { type: t.getAttribute('type') }));
-                if (t.getAttribute('type') !== 'story') els.push(webui.create('webui-content', { src: '/d/help/markdown-guide.md', cache: '' }));
+                // A link to the Markdown guide, rather than the whole guide under every manager.
+                if (t.getAttribute('type') !== 'story') {
+                    const help = webui.create('p', { class: 'f-small', text: 'Every text field supports Markdown. ' });
+                    help.appendChild(webui.create('a', { href: '/help/markdown', text: 'Writing in Markdown' }));
+                    els.push(help);
+                }
             }
             return els;
         },
@@ -123,7 +128,9 @@
                 t._strip = webui.create('webui-flex', { class: 'mb-2', gap: '2', align: 'center', wrap: '', justify: 'flex-end' });
                 t._stripText = webui.create('span', { class: 'f-small' });
                 t._strip.appendChild(t._stripText);
-                t._strip.appendChild(webui.create('a', { href: '/account', class: 'f-small', text: 'Profile and teams' }));
+                const link = webui.create('a', { href: '/account', class: 'f-small', text: 'Profile and teams' });
+                link.style.marginLeft = '0.75em';
+                t._strip.appendChild(link);
             }
             const team = session.team ? `Team: ${session.team.name}${session.team.active ? '' : ' (subscription not active, read only)'}` : 'Personal space (no team)';
             t._stripText.innerText = `Signed in as ${session.profile.name} · ${team}`;

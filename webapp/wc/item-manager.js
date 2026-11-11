@@ -7,6 +7,14 @@
 {
     const AUTOSAVE_DELAY = 1200;
     const viewNames = { editor: 'Editor', both: 'Both', rendered: 'Rendered' };
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+    // Items linked to each list entry by tag, shown as a second line: a problem's solutions, a solution's problem, and so on.
+    const related = {
+        problem: { type: 'solution', describe: (n) => plural(n, 'solution') },
+        feature: { type: 'solution', describe: (n) => plural(n, 'solution') },
+        project: { type: 'problem', describe: (n) => plural(n, 'open problem') },
+        solution: { type: 'problem', parent: true },
+    };
     const viewKeys = { Editor: 'editor', Both: 'both', Rendered: 'rendered' };
 
     webui.define('app-item-manager', {
@@ -56,7 +64,8 @@
                 ts.on('session', () => t.load()),
                 ts.on('items', detail => {
                     if (detail && detail.source === t) return;
-                    if (!detail || !detail.types || detail.types.includes(t._config.key)) t.load();
+                    const linked = related[t._config.key];
+                    if (!detail || !detail.types || detail.types.includes(t._config.key) || (linked && detail.types.includes(linked.type))) t.load();
                 }),
             ];
         },
@@ -93,7 +102,14 @@
 
             const editor = webui.create('webui-paper', { slot: 'editor', elevation: '5', class: 'pa-2' });
             const col = webui.create('webui-flex', { column: '', gap: '2' });
-            t._title = webui.create('webui-paper', { class: 'pa-2', theme: 'success', role: 'status' });
+            t._title = webui.create('webui-paper', { class: 'pa-2', elevation: '1', role: 'status' });
+            const titleRow = webui.create('webui-flex', { wrap: '', gap: '2', align: 'center' });
+            t._titleName = webui.create('strong', {});
+            t._titleOwner = webui.create('span', { class: 'f-small' });
+            titleRow.appendChild(t._titleName);
+            titleRow.appendChild(webui.create('webui-flex', { grow: '' }));
+            titleRow.appendChild(t._titleOwner);
+            t._title.appendChild(titleRow);
             col.appendChild(t._title);
             if (c.help) col.appendChild(webui.create('webui-quote', { theme: 'info', class: 'pa-2', text: c.help }));
             t._loading = webui.create('div', { text: 'Loading...' });
@@ -101,13 +117,16 @@
 
             t._form = webui.create('webui-flex', { column: '', gap: '2' });
             if (!c.readOnly) {
-                const row = webui.create('webui-flex', { wrap: '', gap: '2', align: 'flex-start' });
                 t._name = webui.create('webui-input-text', { label: 'Name', maxlength: '50', title: `Name of this ${c.label.toLowerCase()}` });
                 t._name.addEventListener('input', () => t.nameChanged());
-                row.appendChild(t._name);
-                const prefixLabel = webui.create('label', { class: 'f-small' });
-                prefixLabel.appendChild(document.createTextNode('Tag Prefix '));
+                t._form.appendChild(t._name);
+                const row = webui.create('webui-flex', { wrap: '', gap: '2', align: 'flex-start' });
+                const prefixLabel = webui.create('label', {});
+                Object.assign(prefixLabel.style, { display: 'flex', flexDirection: 'column', fontSize: '0.9em', gap: '0.2em' });
+                prefixLabel.appendChild(document.createTextNode('Tag prefix'));
                 t._prefix = document.createElement('select');
+                // A plain select is tiny next to the other fields, so it gets the field's font and colors.
+                Object.assign(t._prefix.style, { font: 'inherit', fontSize: '1rem', color: 'inherit', background: 'var(--color-background)', border: '1px solid currentColor', borderRadius: '4px', padding: '0.2em 0.4em' });
                 ts.prefixes.forEach(p => {
                     const o = document.createElement('option');
                     o.value = p.id || '_';
@@ -121,7 +140,7 @@
                 });
                 prefixLabel.appendChild(t._prefix);
                 row.appendChild(prefixLabel);
-                t._tagInput = webui.create('app-tag-input', { label: 'Tags', helper: 'Type in name of tag and press enter to add' });
+                t._tagInput = webui.create('app-tag-input', { label: 'Tags', helper: 'Type a tag and press Enter' });
                 t._tagInput.addEventListener('tag-add', ev => {
                     ev.preventDefault();
                     t.addTag(ev.detail.tag);
@@ -137,43 +156,58 @@
                 t._form.appendChild(t._tagInput);
             }
 
+            // Two rows with one job each: the actions that keep or remove the item, then how the text is shown and copied.
+            const actions = webui.create('webui-flex', { wrap: '', gap: '2', align: 'center' });
+            t._deleteBtn = webui.create('webui-button', { theme: 'danger', 'start-icon': 'trash', text: 'Delete' });
+            t._deleteBtn.addEventListener('click', () => t.deleteItem());
+            actions.appendChild(t._deleteBtn);
+            actions.appendChild(webui.create('webui-flex', { grow: '' }));
+            if (!c.readOnly) {
+                t._autoStatus = webui.create('span', { class: 'f-small', role: 'status' });
+                actions.appendChild(t._autoStatus);
+            }
+            if (c.key === 'task') {
+                // Marking a task done saves it at once, like ticking a box on a to-do list.
+                t._doneBtn = webui.create('webui-button', { theme: 'shade', 'start-icon': 'check', text: 'Mark Done' });
+                t._doneBtn.addEventListener('click', () => {
+                    t._current.done = !t._current.done;
+                    t.save();
+                });
+                actions.appendChild(t._doneBtn);
+            }
+            if (c.publish) {
+                t._publishBtn = webui.create('webui-button', { theme: 'shade', 'end-icon': 'upload', text: 'Publish' });
+                t._publishBtn.addEventListener('click', () => t.publish());
+                actions.appendChild(t._publishBtn);
+            }
+            if (!c.readOnly) {
+                t._undoBtn = webui.create('webui-button', { theme: 'warning', 'start-icon': 'undo', text: 'Undo' });
+                t._undoBtn.addEventListener('click', () => t.undo());
+                actions.appendChild(t._undoBtn);
+                t._saveBtn = webui.create('webui-button', { theme: 'primary', 'end-icon': 'save', text: `Save ${c.label}` });
+                t._saveBtn.addEventListener('click', () => t.save());
+                actions.appendChild(t._saveBtn);
+            }
+            t._form.appendChild(actions);
+            // Save errors show under the Save button.
+            t._error = webui.create('webui-alert', { variant: 'danger' });
+            t._form.appendChild(t._error);
+
             const bar = webui.create('webui-flex', { wrap: '', gap: '2', align: 'center' });
-            const copyMd = webui.create('webui-button', { theme: 'info', 'start-icon': 'code', text: 'Copy Markdown' });
-            copyMd.addEventListener('click', () => t.copy(false));
-            bar.appendChild(copyMd);
             if (!c.readOnly) {
                 t._viewSwitch = webui.create('webui-switch', { label: 'View', options: 'Editor|Both|Rendered', value: 'Both', theme: 'secondary' });
                 t._viewSwitch.addEventListener('change', () => t.setView(viewKeys[t._viewSwitch.value] || 'both'));
                 bar.appendChild(t._viewSwitch);
             }
-            const copyHtml = webui.create('webui-button', { theme: 'info', 'start-icon': 'copy', text: 'Copy HTML' });
+            bar.appendChild(webui.create('webui-flex', { grow: '' }));
+            const copyMd = webui.create('webui-button', { theme: 'shade', 'start-icon': 'code', text: 'Copy Markdown' });
+            copyMd.addEventListener('click', () => t.copy(false));
+            bar.appendChild(copyMd);
+            const copyHtml = webui.create('webui-button', { theme: 'shade', 'start-icon': 'copy', text: 'Copy HTML' });
             copyHtml.addEventListener('click', () => t.copy(true));
             bar.appendChild(copyHtml);
-            bar.appendChild(webui.create('webui-flex', { grow: '' }));
-            if (c.publish) {
-                t._publishBtn = webui.create('webui-button', { theme: 'tertiary', 'end-icon': 'upload', text: 'Publish' });
-                t._publishBtn.addEventListener('click', () => t.publish());
-                bar.appendChild(t._publishBtn);
-            }
-            if (!c.readOnly) {
-                t._undoBtn = webui.create('webui-button', { theme: 'warning', 'start-icon': 'undo', text: 'Undo' });
-                t._undoBtn.addEventListener('click', () => t.undo());
-                bar.appendChild(t._undoBtn);
-            }
-            t._deleteBtn = webui.create('webui-button', { theme: 'danger', 'start-icon': 'trash', text: 'Delete' });
-            t._deleteBtn.addEventListener('click', () => t.deleteItem());
-            bar.appendChild(t._deleteBtn);
-            if (!c.readOnly) {
-                t._saveBtn = webui.create('webui-button', { theme: 'success', 'end-icon': 'save', text: `Save ${c.label}` });
-                t._saveBtn.addEventListener('click', () => t.save());
-                bar.appendChild(t._saveBtn);
-                t._autoStatus = webui.create('span', { class: 'f-small', role: 'status' });
-                bar.appendChild(t._autoStatus);
-            }
             t._form.appendChild(bar);
 
-            t._error = webui.create('webui-alert', { variant: 'danger' });
-            t._form.appendChild(t._error);
 
             const fields = c.fields;
             if (c.readOnly) {
@@ -188,7 +222,7 @@
                 if (f.prompt) t._form.appendChild(webui.create('webui-quote', { theme: 'info', class: 'pa-2', text: f.prompt }));
                 t._form.appendChild(t.fieldEditor(f));
             } else {
-                const tabs = webui.create('webui-tabs', { theme: 'primary' });
+                const tabs = webui.create('webui-tabs', { theme: 'shade' });
                 fields.forEach(f => {
                     tabs.appendChild(webui.create('webui-button', { slot: 'tabs', text: f.label }));
                     const content = webui.create('webui-flex', { slot: 'content', column: '', gap: '2' });
@@ -223,9 +257,14 @@
             try {
                 t._session = await ts.session();
                 if (!t._session.profile) return;
-                const items = await ts.api.request('POST', 'items/query', { type: t._config.key, tags: ts.filter.get() });
+                const linked = related[t._config.key];
+                const [items, others] = await Promise.all([
+                    ts.api.request('POST', 'items/query', { type: t._config.key, tags: ts.filter.get() }),
+                    linked ? ts.api.request('POST', 'items/query', { type: linked.type, tags: [] }) : [],
+                ]);
                 if (loadId !== t._loadId) return;
                 t._items = items;
+                t._related = others;
                 t.renderList();
                 const cur = t._current;
                 const found = cur && cur.id ? items.find(i => i.id === cur.id) : null;
@@ -246,13 +285,36 @@
         },
         renderList() {
             const t = this;
-            t._list.items = t._items.map(i => ({ id: i.id, label: i.name, mark: i.tags.includes('bug') ? 'bug' : '' }));
+            const c = t._config;
+            // Stories show when they were published and by whom.
+            const ts = window.taskStory;
+            const linked = related[c.key];
+            const others = t._related || [];
+            const ownTag = (item, prefix) => item.tags.find(tag => tag.startsWith(prefix)) || '';
+            const detail = i => {
+                if (c.readOnly) {
+                    return i.created ? `${new Date(i.created).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })} · ${(i.publishedOwner || '').replace('person:', '')}` : '';
+                }
+                if (c.key === 'task') return i.done ? 'Done' : '';
+                if (!linked) return '';
+                const otherPrefix = ts.types[linked.type].prefix;
+                if (linked.parent) {
+                    // A solution names the problem it belongs to.
+                    const names = i.tags.filter(tag => tag.startsWith(otherPrefix))
+                        .map(tag => (others.find(o => ownTag(o, otherPrefix) === tag) || {}).name || tag);
+                    return names.join(', ');
+                }
+                const tag = ownTag(i, c.prefix);
+                return tag ? linked.describe(others.filter(o => o.tags.includes(tag)).length) : '';
+            };
+            t._list.items = t._items.map(i => ({ id: i.id, label: i.name, mark: i.done ? 'done' : i.tags.includes('bug') ? 'bug' : '', detail: detail(i) }));
             t._list.selected = t._current && t._current.id ? t._current.id : '';
         },
         snapshot(item) {
             const c = this._config;
             const copy = { id: item.id || '', name: item.name || '', tags: (item.tags || []).slice() };
             c.fields.forEach(f => { copy[f.key] = item[f.key] || ''; });
+            if (c.key === 'task') copy.done = !!item.done;
             if (c.readOnly) {
                 copy.publishedOwner = item.publishedOwner || '';
                 copy.created = item.created;
@@ -327,8 +389,9 @@
             const pending = t.isPending();
             t._form.style.display = (!item) ? 'none' : '';
             if (!item) {
-                t._title.setAttribute('theme', 'info');
-                t._title.innerText = `${c.label}: No ${c.plural} Loaded`;
+                t._title.removeAttribute('theme');
+                t._titleName.innerText = `${c.label}: No ${c.plural} Loaded`;
+                t._titleOwner.innerText = '';
                 t._filterBtn.style.display = 'none';
                 return;
             }
@@ -338,26 +401,38 @@
             }
             t._tagInput.tags = item.tags;
             const me = t._session && t._session.profile ? ts.personTag(t._session.profile) : '';
-            let title;
             if (c.readOnly) {
-                title = `${c.label}: ${item.name} - Published by ${(item.publishedOwner || '').replace('person:', '')}`;
+                t._titleName.innerText = `${c.label}: ${item.name}`;
+                t._titleOwner.innerText = `Published by ${(item.publishedOwner || '').replace('person:', '')}`;
             } else {
                 const name = item.name || (isNew ? `New ${c.label}` : 'Missing Name');
-                const owner = c.shared ? (ts.tags.owner(item.tags) || me).replace('person:', '') : 'Private';
-                title = `${c.label}: ${name}${!isNew && pending ? ' (Changes Pending Save)' : ''} - Owner: ${owner}`;
+                const owner = c.shared ? `Owner: ${(ts.tags.owner(item.tags) || me).replace('person:', '')}` : 'Private to you';
+                t._titleName.innerText = `${c.label}: ${name}${!isNew && pending ? ' (Changes Pending Save)' : ''}`;
+                t._titleOwner.innerText = owner;
             }
-            t._title.innerText = title;
-            t._title.setAttribute('theme', !c.readOnly && (isNew || pending) ? 'warning' : 'success');
+            // Plain while saved, and marked while there is something to save.
+            if (!c.readOnly && (isNew || pending)) t._title.setAttribute('theme', 'warning');
+            else t._title.removeAttribute('theme');
             const ownTag = c.prefix && item.name ? ts.tags.fromName(item.name, c.prefix) : '';
             t._filterBtn.style.display = (!(c.shared && ownTag && !isNew)) ? 'none' : '';
-            if (ownTag) t._filterBtn.innerText = `Toggle Tag Filter - ${ownTag}`;
+            if (ownTag) {
+                const on = ts.filter.has(ownTag);
+                t._filterBtn.setAttribute('label', on ? `Stop filtering by ${ownTag}` : `Filter by ${ownTag}`);
+                t._filterBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            }
             if (t._undoBtn) t._undoBtn.style.display = (!pending) ? 'none' : '';
             t._deleteBtn.style.display = (isNew) ? 'none' : '';
             if (t._publishBtn) t._publishBtn.style.display = (isNew) ? 'none' : '';
+            if (t._doneBtn) {
+                t._doneBtn.style.display = (isNew) ? 'none' : '';
+                t._doneBtn.setAttribute('label', item.done ? 'Mark Not Done' : 'Mark Done');
+                t._doneBtn.setAttribute('aria-pressed', item.done ? 'true' : 'false');
+                t._doneBtn.setAttribute('theme', item.done ? 'success' : 'shade');
+            }
             const auto = t.saveMode() === 'auto';
             if (t._saveBtn) {
                 t._saveBtn.style.display = (auto && !isNew) ? 'none' : '';
-                t._saveBtn.setAttribute('theme', isNew || pending ? 'success' : 'shade');
+                t._saveBtn.setAttribute('theme', isNew || pending ? 'primary' : 'shade');
             }
         },
         saveMode() {

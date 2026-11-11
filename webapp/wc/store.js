@@ -84,7 +84,7 @@
             help: 'Stories are published from problems and cannot be edited.',
             fields: [
                 { key: 'problem', label: 'Problem', prompt: '' },
-                { key: 'integratedSolutions', label: 'Integrated Solutions', prompt: '' },
+                { key: 'integratedSolutions', label: 'Shipped Solutions', prompt: '' },
                 { key: 'droppedSolutions', label: 'Dropped Solutions', prompt: '' },
             ]
         },
@@ -415,6 +415,7 @@
         item.tags = Array.from(new Set((input.tags || []).map(t => tags.filterName(t)).filter(Boolean)));
         config.fields.forEach(f => { item[f.key] = `${input[f.key] || ''}`; });
         if (config.key === 'solution') item.isImplemented = !!input.isImplemented;
+        if (config.key === 'task') item.done = !!input.done;
         item.updated = new Date().toISOString();
         return item;
     }
@@ -683,9 +684,9 @@
             created: new Date().toISOString(), updated: new Date().toISOString(),
             tags: Array.from(storyTags),
             publishedOwner: personTag(session.profile),
-            problem: toMarkdown('problem', problem),
-            integratedSolutions: solutions.filter(s => implemented.has(s.id)).map(s => toMarkdown('solution', s)).join('\n\n'),
-            droppedSolutions: solutions.filter(s => !implemented.has(s.id)).map(s => toMarkdown('solution', s)).join('\n\n'),
+            problem: toMarkdown('problem', problem, true),
+            integratedSolutions: solutions.filter(s => implemented.has(s.id)).map(s => toMarkdown('solution', s, true)).join('\n\n'),
+            droppedSolutions: solutions.filter(s => !implemented.has(s.id)).map(s => toMarkdown('solution', s, true)).join('\n\n'),
         };
         if (!save) return { story, solutions };
         story.sortId = (await db.byScope(session.scope, 'story')).length + 1;
@@ -704,7 +705,8 @@
     }
 
     // Markdown export, from the legacy GetMarkdown methods.
-    function toMarkdown(type, item) {
+    // A story leaves out empty fields (skipEmpty), so it reads as a short document rather than a list of blank headings.
+    function toMarkdown(type, item, skipEmpty) {
         const config = types[type];
         const date = v => v ? new Date(v).toDateString() : '';
         const title = type === 'story' ? `${item.name} - Published by ${item.publishedOwner}` : item.name;
@@ -718,7 +720,9 @@
             `| Last Update | ${date(item.updated)} |`,
         ];
         config.fields.forEach(f => {
-            lines.push('', `## ${f.heading || f.label}`, '', item[f.key] || '');
+            const text = `${item[f.key] || ''}`;
+            if (skipEmpty && !text.trim()) return;
+            lines.push('', `## ${f.heading || f.label}`, '', text);
         });
         return lines.join('\n').trim();
     }

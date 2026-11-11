@@ -1,4 +1,5 @@
-<webui-data data-page-title="Help - Workflow" data-page-subtitle="Continuous Agile Software Engineering"></webui-data>
+<webui-data data-page-title="Help: Workflow" data-page-subtitle=""></webui-data>
+<webui-data data-page-next-page='{"name": "Help: Dashboard", "href": "/help/dashboard"}'></webui-data>
 
 ## Recommended team workflow
 
@@ -38,9 +39,9 @@ Problems can come from anywhere: managers, admins, customer feedback, logs, anal
 
 Focus on understanding and defining the specific problem. When you can, describe it from the user's point of view, and never prescribe a solution.
 
-<webui-alert variant="success" show>Good: As a user, I need a way to purchase service X.</webui-alert>
+<webui-quote theme="success" class="pa-2">Good: As a user, I need a way to purchase service X.</webui-quote>
 
-<webui-alert variant="danger" show>Bad: As a user, I need a product page where I can view details of and purchase service X.</webui-alert>
+<webui-quote theme="danger" class="pa-2">Bad: As a user, I need a product page where I can view details of and purchase service X.</webui-quote>
 
 ## Prioritize problems
 

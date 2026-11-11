@@ -1,5 +1,5 @@
 /* A list of selectable entries that can be reordered by dragging, or with Alt+Arrow Up and Alt+Arrow Down.
- * Set .items to [{ id, label, mark }] (mark "bug" highlights the entry) and .selected to an id.
+ * Set .items to [{ id, label, mark, detail }] (mark "bug" highlights the entry, "done" crosses it out, detail is a smaller second line) and .selected to an id.
  * Fires "select" (detail.id) and "reorder" (detail.ids).
  * Candidate for MyFiCDN after the POC.
  */
@@ -82,7 +82,7 @@
             items: {
                 get() { return this._items.map(i => Object.assign({}, i)); },
                 set(list) {
-                    const next = Array.isArray(list) ? list.map(i => ({ id: `${i.id}`, label: `${i.label || ''}`, mark: i.mark || '' })) : [];
+                    const next = Array.isArray(list) ? list.map(i => ({ id: `${i.id}`, label: `${i.label || ''}`, mark: i.mark || '', detail: `${i.detail || ''}` })) : [];
                     if (webui.isEqual(next, this._items)) return;
                     this._items = next;
                     this.render();
@@ -138,6 +138,7 @@
                 btn.type = 'button';
                 btn.dataset.id = item.id;
                 btn.innerText = item.label || '(no name)';
+                if (item.detail) btn.appendChild(webui.create('span', { class: 'detail', text: item.detail }));
                 if (item.id === t._selected) btn.setAttribute('aria-current', 'true');
                 if (sortable) btn.setAttribute('aria-describedby', t._hint.id);
                 li.appendChild(btn);
@@ -189,6 +190,10 @@ cursor:pointer;
 li[data-mark="bug"] button {
 border-left-color:var(--color-danger);
 }
+li[data-mark="done"] button {
+text-decoration:line-through;
+opacity:0.75;
+}
 button[aria-current="true"] {
 background-color:var(--color-info);
 color:var(--color-info-offset);
@@ -196,6 +201,11 @@ color:var(--color-info-offset);
 button:focus-visible {
 outline:2px solid var(--color-focus, currentColor);
 outline-offset:2px;
+}
+.detail {
+display:block;
+font-size:0.8em;
+opacity:0.85;
 }
 .empty, .hint {
 font-size:0.85em;

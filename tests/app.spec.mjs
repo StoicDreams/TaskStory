@@ -43,11 +43,22 @@ test.describe('app-item-manager', () => {
     test('creates a problem with its own tag and owner, and marks unsaved changes', async ({ page }) => {
         await openSignedIn(page, '/problems');
         const manager = page.locator('app-item-manager');
-        await expect(manager).toContainText('Problem: New Problem - Owner: erik');
+        const title = manager.locator('webui-paper[role="status"]');
+        await expect(title).toContainText('Problem: New Problem');
+        await expect(title).toContainText('Owner: erik');
+        // Unsaved work is marked, and the title is plain once it is saved.
+        await expect(title).toHaveAttribute('theme', 'warning');
         await manager.getByLabel('Name').fill('Home Content');
         await expect(manager.locator('app-tag-input')).toContainText('problem:homecontent');
         await manager.getByRole('button', { name: 'Save Problem' }).click();
-        await expect(manager).toContainText('Problem: Home Content - Owner: erik');
+        await expect(title).toContainText('Problem: Home Content');
+        await expect(title).not.toHaveAttribute('theme');
+        // The header button filters every manager by the selected problem, and says so.
+        const filterBtn = manager.getByRole('button', { name: 'Filter by problem:homecontent' });
+        await filterBtn.click();
+        await expect(manager.getByRole('button', { name: 'Stop filtering by problem:homecontent' })).toHaveAttribute('aria-pressed', 'true');
+        expect(await page.evaluate(() => window.taskStory.filter.get())).toEqual(['problem:homecontent']);
+        await manager.getByRole('button', { name: 'Stop filtering by problem:homecontent' }).click();
         await expect(manager.locator('app-sortable-list').getByRole('button', { name: 'Home Content' })).toBeVisible();
         await expect(manager.locator('app-tag-input')).toContainText('person:erik');
         await manager.locator('webui-input-message').first().locator('textarea').fill('The **home page** needs content.');
@@ -84,7 +95,8 @@ test.describe('app-item-manager', () => {
         const manager = page.locator('app-item-manager');
         await manager.getByLabel('Name').fill('Write tests');
         await page.evaluate(() => window.__releaseQuery());
-        await expect(manager).toContainText('Task: Write tests - Owner: Private');
+        await expect(manager).toContainText('Task: Write tests');
+        await expect(manager).toContainText('Private to you');
         await manager.getByRole('button', { name: 'Save Task' }).click();
         await expect(manager.locator('webui-alert')).toContainText('Tasks need at least one tag');
     });
@@ -106,12 +118,64 @@ test.describe('app-item-manager', () => {
         await expect.poll(async () => (await api(page, 'POST', 'items/query', { type: 'task', tags: [] }))[0].details, { timeout: 5000 }).toBe('Saved without clicking Save');
     });
 
+    test('lists show linked items: solutions per problem, and each solution\'s problem', async ({ page }) => {
+        await openSignedIn(page, '/problems');
+        await page.evaluate(async () => {
+            const ts = window.taskStory;
+            await ts.api.request('POST', 'items/problem', { name: 'Slow Search', tags: [] });
+            await ts.api.request('POST', 'items/solution', { name: 'Add Index', tags: ['problem:slowsearch'] });
+            await ts.api.request('POST', 'items/solution', { name: 'Cache Results', tags: ['problem:slowsearch'] });
+            ts.emit('items', {});
+        });
+        const list = page.locator('app-item-manager app-sortable-list');
+        await expect(list.getByRole('button', { name: /Slow Search/ })).toContainText('2 solutions');
+        await openPage(page, '/solutions');
+        await expect(page.locator('app-item-manager app-sortable-list').getByRole('button', { name: /Add Index/ })).toContainText('Slow Search');
+    });
+
+    test('a task can be marked done, which saves it and crosses it out in the list', async ({ page }) => {
+        await openSignedIn(page, '/tasks');
+        await api(page, 'POST', 'items/task', { name: 'Write docs', tags: ['demo'] });
+        await page.evaluate(() => window.taskStory.emit('items', {}));
+        const manager = page.locator('app-item-manager');
+        const entry = manager.locator('app-sortable-list').getByRole('button', { name: /Write docs/ });
+        await entry.click();
+        await manager.getByRole('button', { name: 'Mark Done' }).click();
+        await expect(manager.getByRole('button', { name: 'Mark Not Done' })).toHaveAttribute('aria-pressed', 'true');
+        await expect(entry).toContainText('Done');
+        await expect(manager.locator('app-sortable-list li[data-mark="done"]')).toHaveCount(1);
+        await expect.poll(async () => (await api(page, 'POST', 'items/query', { type: 'task', tags: [] }))[0].done).toBe(true);
+    });
+
     test('stories are read only', async ({ page }) => {
         await openSignedIn(page, '/stories');
         const manager = page.locator('app-item-manager');
         await expect(manager).toContainText('Stories are published from problems and cannot be edited.');
         await expect(manager.getByRole('button', { name: /Add Story/ })).toHaveCount(0);
         await expect(manager.getByLabel('Name')).toHaveCount(0);
+    });
+
+    test('a story leaves out empty sections, and the list shows when and by whom it was published', async ({ page }) => {
+        await openSignedIn(page, '/stories');
+        await page.evaluate(async () => {
+            const ts = window.taskStory;
+            const problem = await ts.api.request('POST', 'items/problem', { name: 'Slow Login', tags: [], summary: 'Login takes ten seconds.' });
+            const solution = await ts.api.request('POST', 'items/solution', { name: 'Cache Tokens', tags: ['problem:slowlogin'], summary: 'Keep tokens for an hour.' });
+            await ts.api.request('POST', 'stories/publish', { problemId: problem.id, implemented: [solution.id] });
+            ts.emit('items', {});
+        });
+        const manager = page.locator('app-item-manager');
+        const entry = manager.locator('app-sortable-list').getByRole('button', { name: /Slow Login/ });
+        await expect(entry).toContainText('erik');
+        await entry.click();
+        await expect(manager).toContainText('Login takes ten seconds.');
+        await expect(manager).toContainText('Shipped Solutions');
+        await expect(manager).toContainText('Keep tokens for an hour.');
+        // Fields nobody filled in have no heading.
+        for (const empty of ['Who', 'Where', 'Investigation', 'Development Notes']) {
+            await expect(manager.getByRole('heading', { name: empty, exact: true })).toHaveCount(0);
+        }
+        await expect(manager).not.toContainText('(rendered)');
     });
 });
 
@@ -133,6 +197,34 @@ test.describe('app-tag-filter', () => {
         await filter.getByRole('button', { name: 'Bug', exact: true }).click();
         await expect(filter.getByRole('button', { name: 'Bug', exact: true })).toHaveAttribute('aria-pressed', 'true');
         await expect(list.getByRole('button')).toHaveCount(0);
+    });
+
+    test('is one line, with the quick filter boxes behind More filters', async ({ page }) => {
+        await openSignedIn(page, '/problems');
+        const filter = page.locator('app-tag-filter');
+        const more = filter.getByRole('button', { name: 'More filters' });
+        await expect(filter.getByLabel('Filter by tag, then press Enter')).toBeVisible();
+        await expect(more).toHaveAttribute('aria-expanded', 'false');
+        await expect(filter.getByLabel('Problem Quick Filter')).toBeHidden();
+        const box = await filter.boundingBox();
+        expect(box.height, 'the closed filter is about one line tall').toBeLessThan(120);
+        await more.click();
+        await expect(more).toHaveAttribute('aria-expanded', 'true');
+        await expect(filter.getByLabel('Problem Quick Filter')).toBeVisible();
+        await more.click();
+        await expect(filter.getByLabel('Problem Quick Filter')).toBeHidden();
+    });
+
+    test('starts with More filters open when a quick filter is in use', async ({ page }) => {
+        await openSignedIn(page, '/problems');
+        await page.evaluate(() => {
+            window.taskStory.filter.setQuick('problem', 'home');
+            const old = document.querySelector('app-tag-filter');
+            old.replaceWith(webui.create('app-tag-filter'));
+        });
+        const filter = page.locator('app-tag-filter');
+        await expect(filter.getByRole('button', { name: 'More filters' })).toHaveAttribute('aria-expanded', 'true');
+        await expect(filter.getByLabel('Problem Quick Filter')).toBeVisible();
     });
 });
 
@@ -214,6 +306,18 @@ test.describe('app-plans', () => {
         await expect(plans).toContainText('Single Developer');
         await expect(plans).toContainText(`$${team.monthlyChargePerUser.toFixed(2)} per user each month`);
         await expect(plans.getByRole('button')).toHaveCount(0);
+        // Each plan links to My Subscription with that plan chosen, and the Team plan is marked for teams.
+        await expect(plans.getByRole('link', { name: 'Start free' })).toHaveAttribute('href', '/account/subscription?plan=');
+        await expect(plans.getByRole('link', { name: 'Start a team' })).toHaveAttribute('href', '/account/subscription?plan=team');
+        await expect(plans.locator('article[data-plan="team"]')).toContainText('For teams');
+        await expect(plans).not.toContainText('Status');
+    });
+
+    test('a plan chosen on the pricing page is selected in My Subscription', async ({ page }) => {
+        await openSignedIn(page, '/account/subscription?plan=team');
+        const sub = page.locator('app-subscription');
+        await expect(sub).toContainText('You have selected the Team plan.');
+        await expect(sub.getByRole('button', { name: 'Purchase Team' })).toBeVisible();
     });
 });
 
@@ -235,9 +339,9 @@ test.describe('app-subscription', () => {
         await sub.getByLabel('Seat name').fill('Karina');
         await sub.getByLabel('Seat email').fill('karina@example.com');
         await sub.getByRole('button', { name: 'Add Seat' }).click();
-        await expect(sub.locator('table')).toContainText('karina@example.com');
+        await expect(sub.getByRole('list', { name: 'Seats' })).toContainText('karina@example.com');
         await sub.getByRole('button', { name: 'Remove Karina from your seats' }).click();
-        await expect(sub.locator('table')).not.toContainText('karina@example.com');
+        await expect(sub.getByRole('list', { name: 'Seats' })).not.toContainText('karina@example.com');
         await sub.locator('app-plans').getByRole('button', { name: 'Select Single Developer', exact: true }).click();
         await expect(sub).toContainText('Warning: moving from a Team plan to a Single Developer plan deletes');
         await expect(sub.getByRole('button', { name: 'Downgrade to Single Developer' })).toBeVisible();

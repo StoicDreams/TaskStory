@@ -24,3 +24,35 @@
 	--color-button: var(--color-info);
 	--color-button-offset: var(--color-info-offset);
 }
+/* Page headings: brand-colored text with a rule, instead of full-width color bars, so screenshots and content lead. */
+webui-app>h2:not([theme]),
+webui-content>h2:not([theme]),
+.readable-content>h2:not([theme]) {
+	background: none;
+	color: var(--color-title);
+	box-shadow: none;
+	border-radius: 0;
+	border-bottom: 2px solid color-mix(in srgb, var(--color-title) 45%, transparent);
+	padding: 0 0 0.2em 0;
+	margin: 1.75rem 0 0.75rem 0;
+}
+
+webui-app>h3:not([theme]),
+webui-content>h3:not([theme]),
+.readable-content>h3:not([theme]) {
+	background: none;
+	color: inherit;
+	box-shadow: none;
+	padding: 0;
+	margin: 1rem 0 0.5rem 0;
+}
+
+/* Running text stays near 75 characters wide, which is easier to read than the full width of a large screen. */
+webui-app>p,
+webui-app>ul,
+webui-app>ol,
+webui-content>p,
+webui-content>ul,
+webui-content>ol {
+	max-width: 75ch;
+}

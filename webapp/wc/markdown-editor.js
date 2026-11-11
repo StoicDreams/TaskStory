@@ -72,7 +72,8 @@
             t._preview = webui.create('webui-paper', { slot: 'preview', class: 'pa-2', elevation: '5' });
             t._previewLabel = webui.create('div', { class: 'f-small', text: t.getAttribute('label') ? `${t.getAttribute('label')} (rendered)` : 'Rendered' });
             t._previewBody = webui.create('div', { class: 'markdown' });
-            t._preview.appendChild(t._previewLabel);
+            // A read-only field has its own heading, so it gets no "(rendered)" label.
+            if (t._editor) t._preview.appendChild(t._previewLabel);
             t._preview.appendChild(t._previewBody);
             frag.appendChild(t._preview);
             t.appendChild(frag);

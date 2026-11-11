@@ -20,7 +20,7 @@
             frag.appendChild(webui.create('app-tag-filter'));
             const bar = webui.create('webui-paper', { elevation: '5', class: 'pa-2 mb-3' });
             const row = webui.create('webui-flex', { wrap: '', gap: '2', align: 'center', justify: 'center' });
-            row.appendChild(webui.create('span', { text: 'Manager Toggles:', title: 'Use these buttons to show and hide the labeled sections' }));
+            row.appendChild(webui.create('span', { text: 'Show:', title: 'Use these buttons to show and hide the labeled sections' }));
             t._buttons = {};
             toggles.forEach(tg => {
                 const btn = webui.create('webui-button', { text: tg.label });
@@ -53,7 +53,10 @@
             const state = t.state();
             toggles.forEach(tg => {
                 const on = !!state[tg.key];
-                t._buttons[tg.key].setAttribute('theme', on ? 'success' : 'shade');
+                // A check mark shows the state as well as the color.
+                t._buttons[tg.key].setAttribute('theme', on ? 'info' : 'shade');
+                if (on) t._buttons[tg.key].setAttribute('start-icon', 'check');
+                else t._buttons[tg.key].removeAttribute('start-icon');
                 t._buttons[tg.key].setAttribute('aria-pressed', on ? 'true' : 'false');
             });
             t._welcome.style.display = (toggles.some(tg => state[tg.key])) ? 'none' : '';

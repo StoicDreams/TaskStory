@@ -68,15 +68,6 @@ Months later, when someone asks why it works this way or whether you ever tried 
 <webui-card name="Save your way" avatar="save">Each person chooses whether changes save automatically or only when they click Save.</webui-card>
 </webui-cards>
 
-## Working on your own?
-
-The free Single Developer plan has the same workflow: problems, solutions, stories, tasks, and the dashboard. Use it for side projects, or to try the approach before bringing in your team. When you are ready, a Team plan adds the shared space.
-
-<webui-flex gap="2" wrap>
-<webui-button theme="primary" start-icon="rocket" href="/dashboard">Try It Free</webui-button>
-<webui-button theme="info" start-icon="tag" href="/pricing">See Plans</webui-button>
-</webui-flex>
-
 ## The method behind it
 
 Task Story follows Continuous Agile Software Engineering (CASE), the way we work at Stoic Dreams: short iterations, problems before solutions, and learning from every decision, including the ones you dropped.
@@ -84,4 +75,13 @@ Task Story follows Continuous Agile Software Engineering (CASE), the way we work
 <webui-flex gap="2" wrap>
 <webui-button theme="secondary" start-icon="book-open" href="/continuous-agile-software-engineering">How Task Story Uses CASE</webui-button>
 <webui-button theme="shade" start-icon="book" href="https://www.softwarestandards.dev/continuous-agile-software-engineering">Read about CASE</webui-button>
+</webui-flex>
+
+## Try it free
+
+The free Single Developer plan has the same workflow: problems, solutions, stories, tasks, and the dashboard. Use it for side projects, or to try the approach before bringing in your team. When you are ready, a Team plan adds the shared space.
+
+<webui-flex gap="2" wrap>
+<webui-button theme="primary" start-icon="rocket" href="/dashboard">Try It Free</webui-button>
+<webui-button theme="info" start-icon="tag" href="/pricing">See Plans</webui-button>
 </webui-flex>

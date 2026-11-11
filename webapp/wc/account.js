@@ -89,6 +89,8 @@
             const [current, currentCol] = t.section('Current Team', 'Projects, features, problems, solutions, and stories belong to the current team. Tasks always stay private to you.');
             const select = document.createElement('select');
             select.setAttribute('aria-label', 'Current team');
+            // Full-size, in the page's font and colors, rather than a small browser default.
+            Object.assign(select.style, { font: 'inherit', fontSize: '1rem', color: 'inherit', background: 'var(--color-background)', border: '1px solid currentColor', borderRadius: '4px', padding: '0.35em 0.5em', maxWidth: '24rem' });
             const personal = document.createElement('option');
             personal.value = '';
             personal.innerText = 'Personal space (no team)';

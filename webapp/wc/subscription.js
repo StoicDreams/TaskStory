@@ -43,6 +43,12 @@
                 return;
             }
             t._selected = t._status.currentKey;
+            // A plan chosen on the pricing page arrives as ?plan=key, once.
+            const asked = new URLSearchParams(location.search).get('plan');
+            if (asked !== null && !t._usedAskedPlan && t._plans.some(p => p.key === asked)) {
+                t._usedAskedPlan = true;
+                t._selected = asked;
+            }
             if (t._name === undefined || t._loadedId !== t._status.id) t._name = t._status.name;
             t._loadedId = t._status.id;
             t.render();
@@ -74,6 +80,7 @@
         clearError() {
             if (this._error) this._error.removeAttribute('show');
         },
+        // What an owner comes for first: where the plan stands, then seats. Changing plans and billing come after.
         render() {
             const t = this;
             const frag = document.createDocumentFragment();
@@ -81,7 +88,6 @@
             const myPlan = t.myPlan();
             if (status.currentKey) {
                 frag.appendChild(t.statusQuote());
-                frag.appendChild(t.billingPanel());
                 if (myPlan.monthlyChargePerUser > 0) {
                     frag.appendChild(webui.create('webui-quote', {
                         theme: 'info', class: 'pa-3 mt-3',
@@ -91,11 +97,23 @@
             } else {
                 frag.appendChild(webui.create('webui-quote', { theme: 'success', class: 'pa-3', text: `You are on the free ${myPlan.name} plan.` }));
             }
-            t._downgrade = webui.create('webui-quote', { theme: 'warning', class: 'pa-3 mt-3', text: 'Warning: moving from a Team plan to a Single Developer plan deletes all of the team\'s data when the new plan goes into effect.' });
-            frag.appendChild(t._downgrade);
-            frag.appendChild(t.namePanel());
             t._error = webui.create('webui-alert', { variant: 'danger' });
             frag.appendChild(t._error);
+            if (myPlan.monthlyChargePerUser > 0) frag.appendChild(t.seatsPanel());
+            frag.appendChild(t.namePanel());
+            frag.appendChild(t.plansPanel());
+            if (status.currentKey) frag.appendChild(t.billingPanel());
+            t.replaceChildren(frag);
+            t.renderChange();
+        },
+        plansPanel() {
+            const t = this;
+            const status = t._status;
+            const paper = webui.create('webui-paper', { elevation: '5', class: 'pa-3 mt-3' });
+            const col = webui.create('webui-flex', { column: '', gap: '2' });
+            col.appendChild(webui.create('h2', { class: 'my-0', text: 'Change Plan' }));
+            t._downgrade = webui.create('webui-quote', { theme: 'warning', class: 'pa-3', text: 'Warning: moving from a Team plan to a Single Developer plan deletes all of the team\'s data when the new plan goes into effect.' });
+            col.appendChild(t._downgrade);
             t._planList = webui.create('app-plans', { selectable: '' });
             t._planList.current = status.currentKey;
             t._planList.selected = t._selected;
@@ -103,12 +121,14 @@
                 t._selected = ev.detail.key;
                 t.renderChange();
             });
-            frag.appendChild(t._planList);
-            frag.appendChild(webui.create('webui-quote', { theme: 'info', class: 'pa-3 mt-3', text: 'We are not currently enforcing any limits on total data consumption. We reserve the right to alter plans and pricing at any time, including setting data consumption limits for plans, if we deem it necessary to do so.' }));
-            frag.appendChild(webui.create('webui-quote', { theme: 'info', class: 'pa-3 mt-3', text: 'In Team plans, seats are charged based on active usage per month. Users are considered active if they use Task Story while signed in at least once during the billing cycle.' }));
-            if (myPlan.monthlyChargePerUser > 0) frag.appendChild(t.seatsPanel());
-            t.replaceChildren(frag);
-            t.renderChange();
+            col.appendChild(t._planList);
+            // The confirm button for a new plan sits under the cards it came from.
+            t._action = webui.create('webui-flex', { gap: '2', align: 'center', wrap: '' });
+            col.appendChild(t._action);
+            col.appendChild(webui.create('webui-quote', { theme: 'info', class: 'pa-3', text: 'We are not currently enforcing any limits on total data consumption. We reserve the right to alter plans and pricing at any time, including setting data consumption limits for plans, if we deem it necessary to do so.' }));
+            col.appendChild(webui.create('webui-quote', { theme: 'info', class: 'pa-3', text: 'In Team plans, seats are charged based on active usage per month. Users are considered active if they use Task Story while signed in at least once during the billing cycle.' }));
+            paper.appendChild(col);
+            return paper;
         },
         statusQuote() {
             const status = this._status;
@@ -167,8 +187,9 @@
             name.addEventListener('input', () => { t._name = name.value; });
             name.addEventListener('change', () => { t._name = name.value; });
             row.appendChild(name);
-            t._action = webui.create('webui-flex', { gap: '2', align: 'center', wrap: '', grow: '' });
-            row.appendChild(t._action);
+            const save = webui.create('webui-button', { theme: 'primary', 'start-icon': 'save', text: 'Save Name' });
+            save.addEventListener('click', () => t.act(() => ts.api.request('POST', 'subscription/name', { name: t._name }), 'Subscription name saved.'));
+            row.appendChild(save);
             paper.appendChild(row);
             return paper;
         },
@@ -180,11 +201,7 @@
             const selected = t.planOf(t._selected);
             t._downgrade.style.display = selected.key !== current.key && !ts.isTeamPlan(selected) && ts.isTeamPlan(current) ? '' : 'none';
             const els = [];
-            if (selected.key === current.key) {
-                const save = webui.create('webui-button', { theme: 'primary', 'start-icon': 'save', text: 'Save Name' });
-                save.addEventListener('click', () => t.act(() => ts.api.request('POST', 'subscription/name', { name: t._name }), 'Subscription name saved.'));
-                els.push(save);
-            } else {
+            if (selected.key !== current.key) {
                 let effect;
                 if (!current.key) effect = 'send you an invoice to start your new subscription.';
                 else if (!selected.key) effect = 'cancel your current subscription.';
@@ -213,30 +230,27 @@
             row.appendChild(email);
             row.appendChild(add);
             col.appendChild(row);
-            const wrap = webui.create('div', { style: 'overflow-x:auto;' });
-            const table = webui.create('table');
-            const head = webui.create('tr');
-            ['Name', 'Email', 'Active', 'Actions'].forEach(h => head.appendChild(webui.create('th', { text: h, scope: 'col' })));
-            table.appendChild(webui.create('thead')).appendChild(head);
-            const body = webui.create('tbody');
+            // One row per seat that wraps on narrow screens, instead of a table that is cut off on a phone.
+            const list = webui.create('webui-flex', { column: '', gap: '1', role: 'list', 'aria-label': 'Seats' });
             t._seats.forEach(seat => {
-                const tr = webui.create('tr');
-                tr.appendChild(webui.create('td', { text: seat.name }));
-                tr.appendChild(webui.create('td', { text: seat.email || '(no email)' }));
-                tr.appendChild(webui.create('td', { text: seat.isActive ? 'Active this cycle' : 'Not active this cycle' }));
-                const actions = webui.create('td');
+                const row = webui.create('webui-flex', { role: 'listitem', wrap: '', gap: '2', align: 'center', class: 'pa-1' });
+                row.style.borderBottom = '1px solid color-mix(in srgb, currentColor 20%, transparent)';
+                const who = webui.create('webui-flex', { column: '', grow: '', align: 'flex-start' });
+                Object.assign(who.style, { alignItems: 'flex-start', textAlign: 'start' });
+                who.appendChild(webui.create('strong', { text: seat.name }));
+                who.appendChild(webui.create('span', { class: 'f-small', text: seat.email || '(no email)' }));
+                row.appendChild(who);
+                row.appendChild(webui.create('span', { class: 'f-small', text: seat.isActive ? 'Active this cycle' : 'Not active this cycle' }));
                 if (seat.isRemoveable) {
                     const remove = webui.create('webui-button', { theme: 'danger', 'start-icon': 'trash', text: 'Remove', 'aria-label': `Remove ${seat.name} from your seats` });
                     remove.addEventListener('click', () => t.act(() => ts.api.request('DELETE', `subscription/seats/${encodeURIComponent(seat.email)}`), `${seat.name} was removed.`));
-                    actions.appendChild(remove);
+                    row.appendChild(remove);
                 } else {
-                    actions.appendChild(webui.create('span', { class: 'f-small', text: 'Owner' }));
+                    row.appendChild(webui.create('span', { class: 'f-small', text: 'Owner' }));
                 }
-                tr.appendChild(actions);
-                body.appendChild(tr);
+                list.appendChild(row);
             });
-            table.appendChild(body);
-            wrap.appendChild(table);
+            const wrap = list;
             col.appendChild(wrap);
             paper.appendChild(col);
             return paper;

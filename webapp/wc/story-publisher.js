@@ -82,15 +82,15 @@
                 });
                 const body = document.createElement('div');
                 body.className = 'md';
-                body.innerHTML = ts.renderMarkdown(ts.toMarkdown('solution', s));
+                body.innerHTML = ts.renderMarkdown(ts.toMarkdown('solution', s, true));
                 row.appendChild(btn);
                 row.appendChild(body);
                 solutions.appendChild(row);
             });
             frag.appendChild(solutions);
             const preview = Object.assign({}, t._story, {
-                integratedSolutions: t._solutions.filter(s => t._implemented.has(s.id)).map(s => ts.toMarkdown('solution', s)).join('\n\n'),
-                droppedSolutions: t._solutions.filter(s => !t._implemented.has(s.id)).map(s => ts.toMarkdown('solution', s)).join('\n\n'),
+                integratedSolutions: t._solutions.filter(s => t._implemented.has(s.id)).map(s => ts.toMarkdown('solution', s, true)).join('\n\n'),
+                droppedSolutions: t._solutions.filter(s => !t._implemented.has(s.id)).map(s => ts.toMarkdown('solution', s, true)).join('\n\n'),
             });
             frag.appendChild(t.section('Preview', ts.renderMarkdown(ts.toMarkdown('story', preview))));
             const warn = document.createElement('p');

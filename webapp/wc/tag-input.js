@@ -35,9 +35,11 @@
             switch (property) {
                 case 'label':
                     t._label.innerText = value || '';
+                    t.updateName();
                     break;
                 case 'placeholder':
                     t._input.setAttribute('placeholder', value || '');
+                    t.updateName();
                     break;
                 case 'helper':
                     t._helper.innerText = value || '';
@@ -53,6 +55,13 @@
                     t.render();
                     break;
             }
+        },
+        /** Without a label, the placeholder names the text box for screen readers. */
+        updateName() {
+            const t = this;
+            const name = !t.getAttribute('label') && t.getAttribute('placeholder');
+            if (name) t._input.setAttribute('aria-label', name);
+            else t._input.removeAttribute('aria-label');
         },
         props: {
             tags: {
@@ -176,6 +185,9 @@ outline-offset:2px;
 .helper {
 font-size:0.8em;
 opacity:0.8;
+}
+label:empty, .helper:empty {
+display:none;
 }
 .chips {
 display:flex;

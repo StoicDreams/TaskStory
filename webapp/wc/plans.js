@@ -1,5 +1,6 @@
 /* Task Story plans, as cards in place of the legacy plans tables (which were too wide for phones).
  * <app-plans></app-plans> lists the plans for guests.
+ * Without selectable, each card links to My Subscription with that plan chosen, and Team plans are highlighted.
  * <app-plans selectable></app-plans> adds a Select button to each card, sets `selected` to the chosen plan's key,
  * and fires "select" with { key }. Set the `current` property to mark the plan you are on.
  */
@@ -72,7 +73,6 @@
                 ['Solutions per problem', limit(plan.solutionsPerProblem)],
                 ['Tasks per user', limit(plan.tasksPerUser)],
                 ['Story retention', `${Number(plan.storyRetentionDays).toLocaleString()} days`],
-                ['Status', plan.status],
             ].forEach(([term, value]) => {
                 const row = webui.create('div');
                 row.appendChild(webui.create('dt', { text: term }));
@@ -83,6 +83,14 @@
             card.appendChild(webui.create('p', { class: 'mark' }));
             const button = webui.create('button', { type: 'button', 'data-key': plan.key });
             card.appendChild(button);
+            const ts = window.taskStory;
+            const team = ts.isTeamPlan(plan);
+            if (team) {
+                card.classList.add('featured');
+                card.appendChild(webui.create('span', { class: 'badge', text: 'For teams' }));
+            }
+            const action = !plan.key ? 'Start free' : team ? 'Start a team' : `Choose ${plan.name}`;
+            card.appendChild(webui.create('a', { class: 'cta', href: `/account/subscription?plan=${encodeURIComponent(plan.key)}`, text: action }));
             return card;
         },
         renderState() {
@@ -97,6 +105,7 @@
                 card.querySelector('.mark').innerText = plan.key === t.current && selectable ? 'Your current plan' : '';
                 const button = card.querySelector('button');
                 button.style.display = selectable ? '' : 'none';
+                card.querySelector('.cta').style.display = selectable ? 'none' : '';
                 button.setAttribute('aria-pressed', chosen ? 'true' : 'false');
                 button.innerText = chosen ? `${plan.name} selected` : `Select ${plan.name}`;
             });
@@ -108,6 +117,13 @@
 .plans { display:grid; grid-template-columns:repeat(auto-fit, minmax(15rem, 1fr)); gap:1rem; }
 .plan { display:flex; flex-direction:column; gap:0.5rem; padding:1rem; border-radius:var(--corners, 4px); border:2px solid color-mix(in srgb, currentColor 30%, transparent); background:var(--color-background); color:inherit; }
 .plan.chosen { border-color:var(--color-success); }
+.plan { position:relative; }
+:host(:not([selectable])) .plan.featured { border-color:var(--color-primary); box-shadow:inset 0 0 0 2px var(--color-primary); }
+.badge { position:absolute; top:-0.8rem; right:1rem; background:var(--color-primary); color:var(--color-primary-offset); padding:0.1rem 0.6rem; border-radius:1rem; font-size:0.85em; font-weight:bold; }
+:host([selectable]) .badge { display:none; }
+.cta { display:block; text-align:center; font-weight:bold; padding:0.5rem 1rem; border-radius:0.25rem; border:2px solid var(--color-primary); color:inherit; text-decoration:none; }
+.featured .cta { background:var(--color-primary); color:var(--color-primary-offset); }
+.cta:focus-visible { outline:3px solid var(--color-info); outline-offset:2px; }
 h3 { margin:0; color:var(--color-title); }
 p { margin:0; }
 .price { font-size:1.25em; font-weight:bold; }
