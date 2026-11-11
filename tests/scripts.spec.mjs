@@ -131,6 +131,31 @@ if ($env:PUBLISH_THROW -eq '${name}') { throw '${name} broke' }
         expect(result.ran).toEqual(steps);
     });
 
+    // A site that captures screenshots has PowerShell/screenshots.ps1, and Publish runs it to update them.
+    const screenshots = { 'PowerShell/screenshots.ps1': stub('screenshots') };
+
+    test('runs screenshots.ps1 after the other steps and before the tests, from the project root', () => {
+        const result = publish([], {}, { ...screenshots, ...packageJson({ test: logLine('npm-test') }) });
+        expect(result.code, result.output).toBe(0);
+        expect(result.ran).toEqual([...steps, 'screenshots', 'npm-test']);
+        expect(result.lines.find(line => line.startsWith('screenshots'))).toContain(`in=${result.dir}`);
+        expect(result.output).toContain('Update the screenshots');
+    });
+
+    test('-SkipScreenshots leaves out screenshots.ps1', () => {
+        const result = publish(['-SkipScreenshots'], {}, screenshots);
+        expect(result.code, result.output).toBe(0);
+        expect(result.ran).toEqual(steps);
+    });
+
+    test('a failing screenshots.ps1 stops Publish before the tests', () => {
+        const result = publish([], { PUBLISH_FAIL: 'screenshots' }, { ...screenshots, ...packageJson({ test: logLine('npm-test') }) });
+        expect(result.code).not.toBe(0);
+        expect(result.ran).toEqual([...steps, 'screenshots']);
+        expect(result.output).toContain('Update the screenshots failed');
+        expect(result.output).not.toContain('Ready to commit.');
+    });
+
     // A stand-in wasm-pack, first on the PATH, that logs its arguments and folder, or fails.
     function fakeWasmPack() {
         const bin = join(tempFolder(), 'bin');

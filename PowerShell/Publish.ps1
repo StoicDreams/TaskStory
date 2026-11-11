@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Prepares the site for a commit: increments the version, minifies the CSS and JavaScript, rebuilds the sitemap, and runs the tests that CI runs.
+Prepares the site for a commit: increments the version, minifies the CSS and JavaScript, rebuilds the sitemap, updates the screenshots, and runs the tests that CI runs.
 
 .DESCRIPTION
 Select this script in Task Proxy's Git Controller to run it before every commit. If any step fails, the commit is cancelled.
@@ -17,6 +17,9 @@ Do not regenerate the .min.js and .min.css files.
 .PARAMETER SkipSiteMap
 Do not rebuild sitemap.xml.
 
+.PARAMETER SkipScreenshots
+Do not run PowerShell/screenshots.ps1. Publish only runs it when the project has one.
+
 .PARAMETER SkipTests
 Do not run the tests that the deploy workflow runs. They run last, on the minified files and the new version.
 #>
@@ -27,6 +30,7 @@ param(
     [switch]$SkipIncrementVersion,
     [switch]$SkipMinify,
     [switch]$SkipSiteMap,
+    [switch]$SkipScreenshots,
     [switch]$SkipTests
 )
 $ErrorActionPreference = 'Stop'
@@ -107,6 +111,8 @@ try {
     }
     if (-not $SkipMinify) { Invoke-Step 'Minify CSS and JavaScript' 'Minify.ps1' }
     if (-not $SkipSiteMap) { Invoke-Step 'Build the sitemap' 'BuildSiteMap.ps1' }
+    # Screenshots are taken from the minified files, and before the tests, so the tests check the new images.
+    if (-not $SkipScreenshots -and (Test-Path (Join-Path $PSScriptRoot 'screenshots.ps1'))) { Invoke-Step 'Update the screenshots' 'screenshots.ps1' }
     if (-not $SkipTests) { Invoke-Tests }
     Write-Host 'Ready to commit.' -ForegroundColor Green
 }

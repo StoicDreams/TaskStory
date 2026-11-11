@@ -51,6 +51,11 @@
         "icon": "circle_question",
         "children": [
             {
+                "name": "Continuous Agile",
+                "icon": "repeat",
+                "url": "/agile-project-management"
+            },
+            {
                 "name": "Workflow",
                 "icon": "list-check",
                 "url": "/help/workflow"
