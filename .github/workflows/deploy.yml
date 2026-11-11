@@ -31,7 +31,8 @@ jobs:
       - name: Install UI Test Tools
         run: |
           npm ci
-          npx playwright install --with-deps chromium
+          # No --with-deps: it runs apt, which fails when Ubuntu's mirrors are down. The runner image already has the libraries Chromium needs.
+          npx playwright install chromium
       # The pages load the minified files and the live CDN, the same as the deployed site.
       - name: Run UI Tests
         run: npm test

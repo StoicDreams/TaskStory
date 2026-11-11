@@ -1,14 +1,14 @@
-<webui-data data-page-title="Continuous Agile Project Management" data-page-subtitle=""></webui-data>
+<webui-data data-page-title="Continuous Agile Software Engineering" data-page-subtitle=""></webui-data>
 
 Some teams ship a new feature every week or two, while others spend months on a handful. The difference is rarely talent, and it is not shortcuts on security or testing. It is usually the workflow: how the team decides what to work on, how it explores options, and how quickly it learns from what it shipped.
 
-Continuous agile project management is the workflow Task Story is built around. This page explains the ideas behind it and how each one shows up in the app.
+Continuous Agile Software Engineering (CASE) is the workflow Task Story is built around. This page explains the ideas behind it and how each one shows up in the app.
 
 ## Agile is a mindset, not a ceremony
 
 True agile development is developer driven. Developers keep evaluating and adapting to new problems, using what they learned from earlier work, from mistakes, and from customer feedback. That means using the best tool and workflow for each job, even when the answer changes from one task to the next.
 
-Continuous agile takes this one step further: work moves in small, finished pieces, so the team gets feedback early and often, instead of saving everything for a large release.
+CASE takes this one step further: work moves in small, finished pieces, so the team gets feedback early and often, instead of saving everything for a large release.
 
 ## Start with the problem
 

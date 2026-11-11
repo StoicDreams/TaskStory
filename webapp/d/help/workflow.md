@@ -1,4 +1,4 @@
-<webui-data data-page-title="Help - Workflow" data-page-subtitle="Continuous agile development"></webui-data>
+<webui-data data-page-title="Help - Workflow" data-page-subtitle="Continuous Agile Software Engineering"></webui-data>
 
 ## Recommended team workflow
 

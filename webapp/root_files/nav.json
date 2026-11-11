@@ -51,9 +51,9 @@
         "icon": "circle_question",
         "children": [
             {
-                "name": "Continuous Agile",
+                "name": "Continuous Agile (CASE)",
                 "icon": "repeat",
-                "url": "/agile-project-management"
+                "url": "/continuous-agile-software-engineering"
             },
             {
                 "name": "Workflow",

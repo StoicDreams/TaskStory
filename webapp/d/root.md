@@ -82,6 +82,6 @@ The free Single Developer plan has the same workflow: problems, solutions, stori
 Task Story follows Continuous Agile Software Engineering (CASE), the way we work at Stoic Dreams: short iterations, problems before solutions, and learning from every decision, including the ones you dropped.
 
 <webui-flex gap="2" wrap>
-<webui-button theme="secondary" start-icon="book-open" href="/agile-project-management">Continuous Agile Project Management</webui-button>
+<webui-button theme="secondary" start-icon="book-open" href="/continuous-agile-software-engineering">How Task Story Uses CASE</webui-button>
 <webui-button theme="shade" start-icon="book" href="https://www.softwarestandards.dev/continuous-agile-software-engineering">Read about CASE</webui-button>
 </webui-flex>
