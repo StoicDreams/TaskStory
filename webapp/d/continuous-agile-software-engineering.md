@@ -4,13 +4,23 @@ Some teams ship a new feature every week or two, while others spend months on a 
 
 Continuous Agile Software Engineering (CASE) is the workflow Task Story is built around. This page explains the ideas behind it and how each one shows up in the app.
 
-## Agile is a mindset, not a ceremony
+On this page:
+
+- [Agile is a mindset, not a ceremony](#mindset)
+- [Start with the problem](#problem-first)
+- [Explore more than one solution](#solutions)
+- [Record what you dropped, not just what you shipped](#stories)
+- [Organize with tags, not hierarchies](#tags)
+- [Keep documentation light](#documentation)
+- [Try it with your team](#try-it)
+
+## Agile is a mindset, not a ceremony {#mindset}
 
 True agile development is developer driven. Developers keep evaluating and adapting to new problems, using what they learned from earlier work, from mistakes, and from customer feedback. That means using the best tool and workflow for each job, even when the answer changes from one task to the next.
 
 CASE takes this one step further: work moves in small, finished pieces, so the team gets feedback early and often, instead of saving everything for a large release.
 
-## Start with the problem
+## Start with the problem {#problem-first}
 
 Most trackers start with a ticket that already describes a fix. By then the team has quietly chosen a solution before it understands the problem.
 
@@ -29,13 +39,13 @@ In Task Story, a problem is written up on its own first: who has it, what it is,
 
 </webui-sideimage>
 
-## Explore more than one solution
+## Explore more than one solution {#solutions}
 
 A problem worth solving usually has more than one possible answer. Writing each one down as its own solution, with its own investigation, testing, and development notes, lets the team compare them honestly and move quickly from one to the next when an approach does not work out.
 
 Each solution is linked to its problem by a tag, and has an owner who drives it.
 
-## Record what you dropped, not just what you shipped
+## Record what you dropped, not just what you shipped {#stories}
 
 When the work is finished, the problem and its solutions are published together as a story. The story keeps the solutions you implemented and the ones you dropped, with the notes explaining why.
 
@@ -45,7 +55,7 @@ That history is easy to lose in other tools, where closed tickets disappear and 
 
 </webui-sideimage>
 
-## Organize with tags, not hierarchies
+## Organize with tags, not hierarchies {#tags}
 
 Deep trees of epics, stories, and subtasks take time to maintain and rarely match how the work really connects. Task Story links everything with tags instead:
 
@@ -55,11 +65,11 @@ Deep trees of epics, stories, and subtasks take time to maintain and rarely matc
 
 Filtering the dashboard by a tag shows everything connected to it, across every list, at once.
 
-## Keep documentation light
+## Keep documentation light {#documentation}
 
 Documentation should support the work, not compete with it. Task Story gives each item a short, guided set of fields, so the team writes what matters and gets back to building. Everything is written in Markdown and can be copied out as Markdown or HTML.
 
-## Try it with your team
+## Try it with your team {#try-it}
 
 Task Story is free for one developer, and Team plans add a shared space with a seat for each teammate.
 

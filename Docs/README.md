@@ -1,6 +1,6 @@
 # Task Story
 
-[Version: 0.1.21](https://github.com/StoicDreams/TaskStory)
+[Version: 0.1.22](https://github.com/StoicDreams/TaskStory)
 
 [WebUI](https://github.com/StoicDreams/WebUI)
 
@@ -22,8 +22,10 @@ Before running this project, follow the [Web CLI Setup](https://webui.stoicdream
 To run the project locally, you can use the following command:
 
 ```terminal:Run the project from the root directory
-./PowerShell/RunLocal.ps1 -port 3210
+./PowerShell/RunLocal.ps1
 ```
+
+It serves the site at http://localhost:8110.
 
 ## Author
 
