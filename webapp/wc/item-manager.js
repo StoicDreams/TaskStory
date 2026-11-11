@@ -30,6 +30,8 @@
                 return;
             }
             t.build();
+            // Start on a blank item so anything typed before the first load finishes is kept as a pending change.
+            t.newItem(true);
             t.listen();
             t.load();
         },

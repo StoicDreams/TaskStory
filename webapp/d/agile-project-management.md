@@ -1,4 +1,4 @@
-<webui-data data-page-title="Agile Project Management" data-page-subtitle=""></webui-data>
+<webui-data data-page-title="Continuous Agile Project Management" data-page-subtitle=""></webui-data>
 
 ### Welcome to Task Story, your Project Manager for Continuous Agile Software Development
 

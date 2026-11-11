@@ -66,6 +66,29 @@ test.describe('app-item-manager', () => {
         await expect(manager.locator('webui-alert')).toContainText('Tasks need at least one tag');
     });
 
+    test('keeps a name typed before the first load finishes', async ({ page }) => {
+        await openSignedIn(page, '/tasks');
+        // Replace the manager with one whose first query waits until released, as on a slow connection.
+        await page.evaluate(() => {
+            const ts = window.taskStory;
+            const request = ts.api.request;
+            window.__releaseQuery = null;
+            const held = new Promise(resolve => { window.__releaseQuery = resolve; });
+            ts.api.request = async (method, path, body) => {
+                if (path === 'items/query') await held;
+                return request(method, path, body);
+            };
+            const old = document.querySelector('app-item-manager');
+            old.replaceWith(webui.create('app-item-manager', { type: 'task' }));
+        });
+        const manager = page.locator('app-item-manager');
+        await manager.getByLabel('Name').fill('Write tests');
+        await page.evaluate(() => window.__releaseQuery());
+        await expect(manager).toContainText('Task: Write tests - Owner: Private');
+        await manager.getByRole('button', { name: 'Save Task' }).click();
+        await expect(manager.locator('webui-alert')).toContainText('Tasks need at least one tag');
+    });
+
     test('saves automatically when the profile chooses autosave', async ({ page }) => {
         await openSignedIn(page, '/tasks');
         await page.evaluate(async () => {
@@ -155,19 +178,68 @@ test.describe('app-story-publisher', () => {
 });
 
 test.describe('app-account', () => {
-    test('creates a team, makes it current, and adds a member', async ({ page }) => {
+    test('saves the profile email, adds a profile, and lists teams from subscriptions', async ({ page }) => {
         await openSignedIn(page, '/account');
         const account = page.locator('app-account');
+        await expect(account).toContainText('You are not on a team yet.');
+        await account.getByLabel('Email', { exact: true }).fill('erik@example.com');
+        await account.getByRole('button', { name: 'Save Profile' }).click();
+        await expect(account).toContainText('Erik (person:erik) erik@example.com');
         await account.getByLabel('New profile name').fill('Karina');
+        await account.getByLabel('New profile email').fill('karina@example.com');
         await account.getByRole('button', { name: 'Add Profile' }).click();
-        await expect(account).toContainText('Karina (person:karina)');
-        await account.getByLabel('New team name').fill('Core');
-        await account.getByRole('button', { name: 'Create Team' }).click();
+        await expect(account).toContainText('Karina (person:karina) karina@example.com');
+        await page.evaluate(async () => {
+            const ts = window.taskStory;
+            await ts.api.request('POST', 'subscription/change', { plan: 'team', name: 'Core' });
+            await ts.api.request('POST', 'billing/pay');
+            await ts.api.request('POST', 'subscription/seats', { name: 'Karina', email: 'karina@example.com' });
+            await ts.sessionChanged();
+        });
+        await expect(account).toContainText('You own this team · 2 members');
+        await account.getByLabel('Current team').selectOption({ label: 'Core' });
         await expect(page.locator('app-workspace')).toContainText('Team: Core');
-        await account.getByRole('checkbox', { name: 'Karina' }).check();
-        await account.getByRole('button', { name: 'Save Team' }).click();
-        await expect(account).toContainText('2 members');
         await account.getByRole('button', { name: 'Switch to Karina' }).click();
         await expect(page.locator('app-workspace')).toContainText('Signed in as Karina');
+        await expect(account).toContainText('Owner: Erik · 2 members');
+    });
+});
+
+test.describe('app-plans', () => {
+    test('lists the plans for guests on the pricing page', async ({ page }) => {
+        await openPage(page, '/pricing');
+        const plans = page.locator('app-plans');
+        await expect(plans.locator('article')).toHaveCount(3);
+        const team = await page.evaluate(() => window.taskStory.plans.find(p => p.key === 'team'));
+        await expect(plans).toContainText('Single Developer');
+        await expect(plans).toContainText(`$${team.monthlyChargePerUser.toFixed(2)} per user each month`);
+        await expect(plans.getByRole('button')).toHaveCount(0);
+    });
+});
+
+test.describe('app-subscription', () => {
+    test('buys a Team plan, pays the simulated invoice, and adds a seat', async ({ page }) => {
+        await openSignedIn(page, '/account/subscription');
+        const sub = page.locator('app-subscription');
+        await expect(sub).toContainText('You are on the free Single Developer plan.');
+        await sub.locator('app-plans').getByRole('button', { name: 'Select Team' }).click();
+        await expect(sub).toContainText('You have selected the Team plan. Confirming this change will send you an invoice');
+        await sub.getByRole('button', { name: 'Purchase Team' }).click();
+        await expect(sub.locator('webui-alert[variant="danger"]')).toContainText('Please enter a name for your subscription');
+        await sub.getByLabel('Company | Team').fill('Core');
+        await sub.getByRole('button', { name: 'Purchase Team' }).click();
+        await expect(sub).toContainText('You are subscribed to the Team plan, which is pending payment.');
+        await sub.getByRole('button', { name: 'Pay Invoice' }).click();
+        await expect(sub).toContainText('set to renew automatically');
+        await expect(sub).toContainText('Based on your current seat usage of');
+        await sub.getByLabel('Seat name').fill('Karina');
+        await sub.getByLabel('Seat email').fill('karina@example.com');
+        await sub.getByRole('button', { name: 'Add Seat' }).click();
+        await expect(sub.locator('table')).toContainText('karina@example.com');
+        await sub.getByRole('button', { name: 'Remove Karina from your seats' }).click();
+        await expect(sub.locator('table')).not.toContainText('karina@example.com');
+        await sub.locator('app-plans').getByRole('button', { name: 'Select Single Developer', exact: true }).click();
+        await expect(sub).toContainText('Warning: moving from a Team plan to a Single Developer plan deletes');
+        await expect(sub.getByRole('button', { name: 'Downgrade to Single Developer' })).toBeVisible();
     });
 });

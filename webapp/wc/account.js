@@ -1,5 +1,6 @@
-/* Profile and team settings for the POC, in place of the legacy account panel and team subscriptions.
+/* Profile and team settings for the POC, in place of the legacy account panel.
  * Profiles stand in for MyFi accounts, so several can be created and switched between to test sharing in one browser.
+ * Teams come from Team subscriptions (see app-subscription): a profile whose email matches a seat is a member.
  */
 "use strict"
 {
@@ -64,9 +65,12 @@
             const nameRow = webui.create('webui-flex', { gap: '2', align: 'flex-end', wrap: '' });
             const name = webui.create('webui-input-text', { label: 'Display name', maxlength: '50' });
             name.value = me.name;
-            const rename = webui.create('webui-button', { theme: 'primary', text: 'Save Name' });
-            rename.addEventListener('click', () => t.act(() => ts.api.request('POST', 'profiles', { id: me.id, name: name.value }), 'Name saved.'));
+            const email = webui.create('webui-input-text', { label: 'Email', maxlength: '300', helper: 'Stands in for your Stoic Dreams account email. Team seats are matched by email.' });
+            email.value = me.email || '';
+            const rename = webui.create('webui-button', { theme: 'primary', text: 'Save Profile' });
+            rename.addEventListener('click', () => t.act(() => ts.api.request('POST', 'profiles', { id: me.id, name: name.value, email: email.value }), 'Profile saved.'));
             nameRow.appendChild(name);
+            nameRow.appendChild(email);
             nameRow.appendChild(rename);
             mineCol.appendChild(nameRow);
             mineCol.appendChild(webui.create('p', { class: 'f-small', text: 'Changing your name changes the owner tag on items you save from now on. Items you already own keep the old tag.' }));
@@ -101,25 +105,17 @@
             frag.appendChild(current);
 
             // Teams
-            const [teamsBox, teamsCol] = t.section('Teams', 'The team owner can rename the team, choose its members from the local profiles, or delete it. Deleting a team deletes its items.');
+            const [teamsBox, teamsCol] = t.section('Teams', 'Teams come from Team subscriptions. The subscription owner adds a seat for each person by email, and the subscription name is the team name.');
+            if (!teams.length) teamsCol.appendChild(webui.create('p', { text: 'You are not on a team yet.' }));
             teams.forEach(team => teamsCol.appendChild(t.teamCard(team, me, profiles)));
-            const newRow = webui.create('webui-flex', { gap: '2', align: 'flex-end', wrap: '' });
-            const teamName = webui.create('webui-input-text', { label: 'New team name', maxlength: '50' });
-            const createTeam = webui.create('webui-button', { theme: 'primary', 'start-icon': 'plus', text: 'Create Team' });
-            createTeam.addEventListener('click', () => t.act(async () => {
-                const team = await ts.api.request('POST', 'teams', { name: teamName.value });
-                await ts.api.request('POST', 'session', { teamId: team.id });
-            }, 'Team created.'));
-            newRow.appendChild(teamName);
-            newRow.appendChild(createTeam);
-            teamsCol.appendChild(newRow);
+            teamsCol.appendChild(webui.create('webui-link', { href: '/account/subscription', text: 'Manage your plan and seats in My Subscription' }));
             frag.appendChild(teamsBox);
 
             // Profiles
             const [profBox, profCol] = t.section('Local Profiles', 'For this preview only: profiles stand in for Stoic Dreams accounts, so you can switch between people in this browser to test ownership and team sharing.');
             profiles.forEach(p => {
                 const row = webui.create('webui-flex', { gap: '2', align: 'center', wrap: '' });
-                row.appendChild(webui.create('span', { text: `${p.name} (${ts.personTag(p)})${p.id === me.id ? ' - you' : ''}` }));
+                row.appendChild(webui.create('span', { text: `${p.name} (${ts.personTag(p)})${p.email ? ` ${p.email}` : ''}${p.id === me.id ? ' - you' : ''}` }));
                 if (p.id !== me.id) {
                     const use = webui.create('webui-button', { theme: 'info', 'start-icon': 'user-check', text: 'Switch To', 'aria-label': `Switch to ${p.name}` });
                     use.addEventListener('click', () => t.act(() => ts.setSession({ profileId: p.id }), `Switched to ${p.name}.`));
@@ -127,16 +123,18 @@
                 }
                 const del = webui.create('webui-button', { theme: 'danger', 'start-icon': 'trash', text: 'Delete', 'aria-label': `Delete the profile ${p.name}` });
                 del.addEventListener('click', () => {
-                    webui.dialog.confirm(webui.escapeHtml(`Delete the profile ${p.name} and their private tasks? This cannot be undone.`), () => t.act(() => ts.api.request('DELETE', `profiles/${p.id}`), 'Profile deleted.'));
+                    webui.dialog.confirm(webui.escapeHtml(`Delete the profile ${p.name}, their private tasks, and their personal items? This cannot be undone.`), () => t.act(() => ts.api.request('DELETE', `profiles/${p.id}`), 'Profile deleted.'));
                 });
                 row.appendChild(del);
                 profCol.appendChild(row);
             });
             const addRow = webui.create('webui-flex', { gap: '2', align: 'flex-end', wrap: '' });
             const newName = webui.create('webui-input-text', { label: 'New profile name', maxlength: '50' });
+            const newEmail = webui.create('webui-input-text', { label: 'New profile email', maxlength: '300' });
             const add = webui.create('webui-button', { theme: 'primary', 'start-icon': 'user-plus', text: 'Add Profile' });
-            add.addEventListener('click', () => t.act(() => ts.api.request('POST', 'profiles', { name: newName.value }), 'Profile added.'));
+            add.addEventListener('click', () => t.act(() => ts.api.request('POST', 'profiles', { name: newName.value, email: newEmail.value }), 'Profile added.'));
             addRow.appendChild(newName);
+            addRow.appendChild(newEmail);
             addRow.appendChild(add);
             profCol.appendChild(addRow);
             frag.appendChild(profBox);
@@ -144,56 +142,13 @@
             t.replaceChildren(frag);
         },
         teamCard(team, me, profiles) {
-            const t = this;
-            const ts = window.taskStory;
-            const isOwner = team.ownerId === me.id;
             const owner = profiles.find(p => p.id === team.ownerId);
             const card = webui.create('webui-paper', { elevation: '10', class: 'pa-2' });
-            const col = webui.create('webui-flex', { column: '', gap: '2' });
+            const col = webui.create('webui-flex', { column: '', gap: '1' });
             col.appendChild(webui.create('h3', { class: 'my-0', text: team.name }));
-            col.appendChild(webui.create('span', { class: 'f-small', text: `Owner: ${owner ? owner.name : 'unknown'} · ${team.members.length} member${team.members.length === 1 ? '' : 's'}` }));
-            if (!isOwner) {
-                const leave = webui.create('webui-button', { theme: 'warning', 'start-icon': 'user-minus', text: 'Leave Team' });
-                leave.addEventListener('click', () => t.act(() => ts.api.request('POST', `teams/${team.id}/leave`), `You left ${team.name}.`));
-                col.appendChild(leave);
-                card.appendChild(col);
-                return card;
-            }
-            const nameRow = webui.create('webui-flex', { gap: '2', align: 'flex-end', wrap: '' });
-            const name = webui.create('webui-input-text', { label: 'Team name', maxlength: '50' });
-            name.value = team.name;
-            nameRow.appendChild(name);
-            col.appendChild(nameRow);
-            const fieldset = document.createElement('fieldset');
-            const legend = document.createElement('legend');
-            legend.innerText = 'Members';
-            fieldset.appendChild(legend);
-            const boxes = profiles.map(p => {
-                const label = document.createElement('label');
-                label.style.marginRight = '1em';
-                const box = document.createElement('input');
-                box.type = 'checkbox';
-                box.value = p.id;
-                box.checked = team.members.includes(p.id);
-                box.disabled = p.id === team.ownerId;
-                label.appendChild(box);
-                label.appendChild(document.createTextNode(` ${p.name}`));
-                fieldset.appendChild(label);
-                return box;
-            });
-            col.appendChild(fieldset);
-            const buttons = webui.create('webui-flex', { gap: '2', wrap: '' });
-            const save = webui.create('webui-button', { theme: 'success', 'start-icon': 'save', text: 'Save Team' });
-            save.addEventListener('click', () => t.act(() => ts.api.request('POST', 'teams', {
-                id: team.id, name: name.value, members: boxes.filter(b => b.checked).map(b => b.value)
-            }), 'Team saved.'));
-            const del = webui.create('webui-button', { theme: 'danger', 'start-icon': 'trash', text: 'Delete Team' });
-            del.addEventListener('click', () => {
-                webui.dialog.confirm(webui.escapeHtml(`Delete the team ${team.name} and all its items? This cannot be undone.`), () => t.act(() => ts.api.request('DELETE', `teams/${team.id}`), 'Team deleted.'));
-            });
-            buttons.appendChild(save);
-            buttons.appendChild(del);
-            col.appendChild(buttons);
+            const who = team.ownerId === me.id ? 'You own this team' : `Owner: ${owner ? owner.name : 'unknown'}`;
+            col.appendChild(webui.create('span', { class: 'f-small', text: `${who} · ${team.members.length} member${team.members.length === 1 ? '' : 's'}` }));
+            if (!team.active) col.appendChild(webui.create('span', { class: 'f-small', text: 'The subscription is not active, so the team\'s items are read only until it is paid.' }));
             card.appendChild(col);
             return card;
         }

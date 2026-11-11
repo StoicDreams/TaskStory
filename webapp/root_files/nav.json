@@ -1,6 +1,6 @@
 [
     {
-        "name": "About",
+        "name": "Home",
         "icon": "circle_emoji-house|theme:title|backing|inverted",
         "url": "/"
     },
@@ -102,5 +102,16 @@
         "icon": "users",
         "url": "/account",
         "role": 1
+    },
+    {
+        "name": "My Subscription",
+        "icon": "ticket",
+        "url": "/account/subscription",
+        "role": 1
+    },
+    {
+        "name": "Pricing",
+        "icon": "tag",
+        "url": "/pricing"
     }
 ]

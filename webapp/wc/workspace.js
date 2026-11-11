@@ -1,6 +1,6 @@
 /* Wraps every signed-in page. Guests see a sign-in prompt, signed-in visitors without a local profile create one,
  * and everyone else sees a strip with their profile and team, then the page itself.
- * <app-workspace view="dashboard|manager|account" type="problem"></app-workspace>
+ * <app-workspace view="dashboard|manager|account|subscription" type="problem"></app-workspace>
  * Sign-in is real (MyFi). Profiles stand in for MyFi accounts during the POC.
  */
 "use strict"
@@ -108,6 +108,8 @@
                 els.push(webui.create('app-dashboard'));
             } else if (view === 'account') {
                 els.push(webui.create('app-account'));
+            } else if (view === 'subscription') {
+                els.push(webui.create('app-subscription'));
             } else if (view === 'manager') {
                 els.push(webui.create('app-tag-filter'));
                 els.push(webui.create('app-item-manager', { type: t.getAttribute('type') }));
@@ -123,7 +125,7 @@
                 t._strip.appendChild(t._stripText);
                 t._strip.appendChild(webui.create('a', { href: '/account', class: 'f-small', text: 'Profile and teams' }));
             }
-            const team = session.team ? `Team: ${session.team.name}` : 'Personal space (no team)';
+            const team = session.team ? `Team: ${session.team.name}${session.team.active ? '' : ' (subscription not active, read only)'}` : 'Personal space (no team)';
             t._stripText.innerText = `Signed in as ${session.profile.name} · ${team}`;
         }
     });
