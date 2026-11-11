@@ -89,7 +89,10 @@
 			<webui-alerts title="View your notifications" data-title="My Alerts" data-toggleclass=".shared|open"></webui-alerts>
 			<webui-myfi-info>
 				<template slot="panel-content">
-					<webui-alert show variant="info">Example Account Panel</webui-alert>
+					<webui-flex column gap="2">
+						<webui-link href="/dashboard" icon="grid">My Dashboard</webui-link>
+						<webui-link href="/account" icon="users">Profile and Teams</webui-link>
+					</webui-flex>
 				</template>
 			</webui-myfi-info>
 		</header>

@@ -1,7 +1,106 @@
 [
     {
-        "name": "Home",
+        "name": "About",
         "icon": "circle_emoji-house|theme:title|backing|inverted",
         "url": "/"
+    },
+    {
+        "name": "Dashboard",
+        "icon": "grid",
+        "url": "/dashboard",
+        "role": 1
+    },
+    {
+        "name": "Projects",
+        "icon": "folder",
+        "url": "/projects",
+        "role": 1
+    },
+    {
+        "name": "Features",
+        "icon": "puzzle-piece",
+        "url": "/features",
+        "role": 1
+    },
+    {
+        "name": "Problems",
+        "icon": "triangle_exclamation",
+        "url": "/problems",
+        "role": 1
+    },
+    {
+        "name": "Solutions",
+        "icon": "lightbulb",
+        "url": "/solutions",
+        "role": 1
+    },
+    {
+        "name": "Tasks",
+        "icon": "circle_check",
+        "url": "/tasks",
+        "role": 1
+    },
+    {
+        "name": "Stories",
+        "icon": "book-open",
+        "url": "/stories",
+        "role": 1
+    },
+    {
+        "name": "Help",
+        "icon": "circle_question",
+        "children": [
+            {
+                "name": "Workflow",
+                "icon": "list-check",
+                "url": "/help/workflow"
+            },
+            {
+                "name": "Dashboard",
+                "icon": "grid",
+                "url": "/help/dashboard"
+            },
+            {
+                "name": "Projects",
+                "icon": "folder",
+                "url": "/help/projects"
+            },
+            {
+                "name": "Features",
+                "icon": "puzzle-piece",
+                "url": "/help/features"
+            },
+            {
+                "name": "Problems",
+                "icon": "triangle_exclamation",
+                "url": "/help/problems"
+            },
+            {
+                "name": "Solutions",
+                "icon": "lightbulb",
+                "url": "/help/solutions"
+            },
+            {
+                "name": "Tasks",
+                "icon": "circle_check",
+                "url": "/help/tasks"
+            },
+            {
+                "name": "Stories",
+                "icon": "book-open",
+                "url": "/help/stories"
+            },
+            {
+                "name": "Markdown",
+                "icon": "pen",
+                "url": "/help/markdown"
+            }
+        ]
+    },
+    {
+        "name": "Profile and Teams",
+        "icon": "users",
+        "url": "/account",
+        "role": 1
     }
 ]

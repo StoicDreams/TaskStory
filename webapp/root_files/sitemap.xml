@@ -2,6 +2,42 @@
 <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
 		<loc>https://www.taskstory.com/</loc>
-		<lastmod>2026-11-09</lastmod>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/workflow</loc>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/dashboard</loc>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/projects</loc>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/features</loc>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/problems</loc>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/solutions</loc>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/tasks</loc>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/stories</loc>
+		<lastmod>2026-11-10</lastmod>
+	</url>
+	<url>
+		<loc>https://www.taskstory.com/help/markdown</loc>
+		<lastmod>2026-11-10</lastmod>
 	</url>
 </urlset>
