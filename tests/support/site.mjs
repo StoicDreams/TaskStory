@@ -135,6 +135,60 @@ export function screenshotRoutes() {
         .sort();
 }
 
+/** The nav.json item for a route, including nested children. */
+function navItem(route) {
+    const find = items => {
+        for (const item of items || []) {
+            if (typeof item.url === 'string' && (item.url.replace(/[?#].*$/, '') || '/') === route) return item;
+            const child = find(item.children);
+            if (child) return child;
+        }
+        return null;
+    };
+    return find(readJson(join(ROOT_FILES, 'nav.json')));
+}
+
+/**
+ * The roles a visitor needs to see a page's content, as one role number for signIn, or 0 for a guest.
+ * A page needs sign-in when its nav.json item has a role above 0, or when all of its content is inside one
+ * webui-restrict-to-role. Then the user also gets the role of every webui-restrict-to-role on the page (except
+ * role 0, which is for guests only), so everything a signed-in visitor could see shows. -1 is every role.
+ */
+export function pageRoles(route) {
+    const file = routeToFile(route);
+    const text = existsSync(file) ? readText(file) : '';
+    const content = text.replace(/<webui-data\b[^>]*>\s*<\/webui-data>/g, '').trim();
+    const navRole = parseInt(navItem(route)?.role) || 0;
+    const allRestricted = /^<webui-restrict-to-role\b/.test(content) && /<\/webui-restrict-to-role>$/.test(content);
+    if (navRole === 0 && !allRestricted) return 0;
+    const roles = [navRole, ...[...text.matchAll(/<webui-restrict-to-role\b[^>]*\brole="(-?\d+)"/g)].map(match => parseInt(match[1]))];
+    if (roles.includes(-1)) return -1;
+    return roles.reduce((all, role) => all | role, 1);
+}
+
+/**
+ * Signs the page in as a test user with the given roles (see pageRoles) by answering the site's rolesApi.
+ * Call it before the page opens. Nothing reaches a real account: every other API request still gets the default answer.
+ */
+export async function signIn(page, roles) {
+    const config = readJson(join(ROOT_FILES, 'appConfig.json'));
+    if (!config.appApi || !config.rolesApi) throw new Error('appConfig.json needs appApi and rolesApi to sign in');
+    const rolesUrl = new URL(config.rolesApi, config.appApi.replace(/\/?$/, '/'));
+    await page.route(url => url.origin === rolesUrl.origin && url.pathname === rolesUrl.pathname, route => route.fulfill({
+        headers: {
+            'access-control-allow-origin': route.request().headers().origin || new URL(page.url()).origin,
+            'access-control-allow-credentials': 'true',
+        },
+        contentType: 'text/plain',
+        body: String(roles),
+    }));
+}
+
+/** Waits until the page has loaded the signed-in user's roles. */
+export async function expectSignedIn(page, roles) {
+    await expect.poll(() => page.evaluate(() => webui.getData('session-user-role')), { message: 'The test user never signed in' }).toBe(roles);
+}
+
 /** Where screenshots/pages.shots.mjs saves a page's screenshot. "/" is root.png, like d/root.md. */
 export const PAGE_SCREENSHOTS = join(ROOT_FILES, 'img', 'screenshots', 'pages');
 export function pageScreenshotFile(route) {

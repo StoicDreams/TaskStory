@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import {
     test, expect, openPage, undefinedComponents,
     WEBAPP, ROOT_FILES, readJson, readText, siteOrigin, pageFiles, routeToFile, navRoutes, sitemapUrls,
-    pageRoutes, screenshotRoutes, pageScreenshotFile, isDynamicRoute, resolveSiteFile, relativeToSite, themeVariables, themeContrastProblems, normalizeThemeValue,
+    pageRoutes, screenshotRoutes, pageScreenshotFile, pageRoles, signIn, expectSignedIn, isDynamicRoute, resolveSiteFile, relativeToSite, themeVariables, themeContrastProblems, normalizeThemeValue,
 } from './support/site.mjs';
 import config from './site.config.mjs';
 
@@ -107,6 +107,20 @@ test.describe('pages', () => {
         const missing = screenshotRoutes().filter(route => !existsSync(pageScreenshotFile(route)));
         expect(missing, 'Run PowerShell/screenshots.ps1 to capture these pages').toEqual([]);
     });
+
+    // The screenshots sign in with these roles, so they must be enough to show the page's content.
+    for (const route of screenshotRoutes().filter(route => pageRoles(route) !== 0)) {
+        test(`${route} shows its content to the screenshot user`, async ({ page }) => {
+            const roles = pageRoles(route);
+            await signIn(page, roles);
+            await openPage(page, route);
+            await expectSignedIn(page, roles);
+            const hidden = await page.evaluate(() => [...document.querySelectorAll('webui-restrict-to-role')]
+                .filter(el => el.getAttribute('role') !== '0' && el._showing !== 'content')
+                .map(el => `role="${el.getAttribute('role')}"`));
+            expect(hidden, 'The test user from pageRoles should see every restricted section').toEqual([]);
+        });
+    }
 
     for (const route of pageRoutes()) {
         test(`${route} loads`, async ({ page }) => {
