@@ -179,8 +179,8 @@ border-bottom:1px solid currentColor;
 padding:0.3em 0;
 }
 input:focus-visible {
-outline:2px solid var(--color-focus, currentColor);
-outline-offset:2px;
+outline:var(--focus-outline, 2px solid currentColor);
+outline-offset:var(--focus-offset, 2px);
 }
 .helper {
 font-size:0.8em;
@@ -228,8 +228,8 @@ padding:0;
 cursor:pointer;
 }
 .chip button:focus-visible {
-outline:2px solid var(--color-focus, currentColor);
-outline-offset:2px;
+outline:var(--focus-outline, 2px solid currentColor);
+outline-offset:var(--focus-offset, 2px);
 }
 </style>
 `
