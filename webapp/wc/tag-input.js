@@ -7,7 +7,7 @@
 {
     const fallbackFilter = value => `${value || ''}`.trim().toLowerCase();
     webui.define('app-tag-input', {
-        preload: 'app:store',
+        preload: 'app:store flex',
         attr: ['label', 'tag-prefix', 'placeholder', 'helper', 'maxlength'],
         flags: ['readonly', 'nochips'],
         constructor() {
@@ -145,19 +145,19 @@
             }
             t._chips.replaceChildren(frag);
         },
+        // The text box and the chips share one wrapping row: chips sit to the right of the box, then wrap under it.
         shadowTemplate: `
+<webui-flex wrap align="flex-end" gap="calc(var(--padding) / 2)">
 <div class="field">
 <label></label>
 <input type="text" autocomplete="off" />
 <div class="helper"></div>
 </div>
 <div class="chips"></div>
+</webui-flex>
 <style type="text/css">
 :host {
-display:flex;
-flex-wrap:wrap;
-align-items:flex-start;
-gap:var(--padding);
+display:block;
 box-sizing:border-box;
 }
 .field {
@@ -190,14 +190,7 @@ label:empty, .helper:empty {
 display:none;
 }
 .chips {
-display:flex;
-flex-wrap:wrap;
-gap:calc(var(--padding) / 2);
-align-items:center;
-flex:1 1 200px;
-}
-.chips:empty {
-display:none;
+display:contents;
 }
 .chip {
 display:inline-flex;

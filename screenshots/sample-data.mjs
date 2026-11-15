@@ -52,7 +52,9 @@ export async function signIn(page) {
 export async function addSampleData(page) {
     await signIn(page);
     await page.goto('/dashboard');
-    await expect(page.locator('app-workspace')).toContainText('Create your profile');
+    // The first page of each test loads every component cold, and with several workers at once that can take
+    // well over the default 5 seconds.
+    await expect(page.locator('app-workspace')).toContainText('Create your profile', { timeout: 30000 });
     await page.evaluate(async data => {
         const ts = window.taskStory;
         const api = (m, p, b) => ts.api.request(m, p, b);

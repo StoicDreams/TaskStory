@@ -5,8 +5,10 @@
  */
 "use strict"
 {
+    // Each manager's help page, named as in the menu: /d/help/{name}-guide.md.
+    const guideNames = { project: 'Projects', feature: 'Features', problem: 'Problems', solution: 'Solutions', task: 'Tasks', story: 'Stories' };
     webui.define('app-workspace', {
-        preload: 'app:store button flex paper quote input-text',
+        preload: 'app:store button flex paper quote input-text page-help tabs content',
         attr: ['view', 'type'],
         constructor() {
             this._unsubs = [];
@@ -113,14 +115,34 @@
             } else if (view === 'manager') {
                 els.push(webui.create('app-tag-filter'));
                 els.push(webui.create('app-item-manager', { type: t.getAttribute('type') }));
-                // A link to the Markdown guide, rather than the whole guide under every manager.
-                if (t.getAttribute('type') !== 'story') {
-                    const help = webui.create('p', { class: 'f-small', text: 'Every text field supports Markdown. ' });
-                    help.appendChild(webui.create('a', { href: '/help/markdown', text: 'Writing in Markdown' }));
-                    els.push(help);
-                }
             }
+            const help = t.helpBubble(view, t.getAttribute('type'));
+            if (help) els.push(help);
             return els;
+        },
+        // The page's guides in a Help bubble, out of the way until wanted. Pages with more than one guide get a tab each.
+        helpBubble(view, type) {
+            const guides = [];
+            if (view === 'dashboard') guides.push({ label: 'Dashboard', file: 'dashboard' });
+            if (view === 'manager' && guideNames[type]) guides.push({ label: guideNames[type], file: guideNames[type].toLowerCase() });
+            // Stories are read only, so their page has nothing to write.
+            if (view === 'dashboard' || (view === 'manager' && type !== 'story')) guides.push({ label: 'Markdown', file: 'markdown' });
+            if (!guides.length) return null;
+            const help = webui.create('webui-page-help', { heading: 'Help', 'storage-key': 'taskstory-help' });
+            const guide = g => webui.create('webui-content', { src: `/d/help/${g.file}-guide.md`, cache: '', nodetach: '', preload: '' });
+            if (guides.length === 1) {
+                help.appendChild(guide(guides[0]));
+                return help;
+            }
+            const tabs = webui.create('webui-tabs', { theme: 'info' });
+            guides.forEach(g => {
+                tabs.appendChild(webui.create('webui-button', { slot: 'tabs', text: g.label }));
+                const content = guide(g);
+                content.setAttribute('slot', 'content');
+                tabs.appendChild(content);
+            });
+            help.appendChild(tabs);
+            return help;
         },
         renderStrip(session) {
             const t = this;

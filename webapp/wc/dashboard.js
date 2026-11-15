@@ -10,10 +10,9 @@
         { key: 'problem', label: 'Problems' },
         { key: 'feature', label: 'Features' },
         { key: 'project', label: 'Projects' },
-        { key: 'markdown', label: 'Markdown' },
     ];
     webui.define('app-dashboard', {
-        preload: 'app:store app:tag-filter app:item-manager button flex paper quote content',
+        preload: 'app:store app:tag-filter app:item-manager button flex paper quote',
         connected() {
             const t = this;
             const frag = document.createDocumentFragment();
@@ -64,9 +63,7 @@
             toggles.forEach(tg => {
                 const on = !!state[tg.key];
                 if (on && !t._shown[tg.key]) {
-                    t._shown[tg.key] = tg.key === 'markdown'
-                        ? webui.create('webui-content', { src: '/d/help/markdown-guide.md', cache: '' })
-                        : webui.create('app-item-manager', { type: tg.key });
+                    t._shown[tg.key] = webui.create('app-item-manager', { type: tg.key });
                 } else if (!on && t._shown[tg.key]) {
                     t._shown[tg.key].remove();
                     delete t._shown[tg.key];

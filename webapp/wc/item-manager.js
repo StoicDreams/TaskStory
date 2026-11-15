@@ -119,8 +119,25 @@
             if (!c.readOnly) {
                 t._name = webui.create('webui-input-text', { label: 'Name', maxlength: '50', title: `Name of this ${c.label.toLowerCase()}` });
                 t._name.addEventListener('input', () => t.nameChanged());
-                t._form.appendChild(t._name);
-                const row = webui.create('webui-flex', { wrap: '', gap: '2', align: 'flex-start' });
+                // Name, then the buttons that keep or discard changes, on one line.
+                const nameRow = webui.create('webui-flex', { wrap: '', align: 'center' });
+                const nameBox = webui.create('webui-flex', { grow: '', column: '' });
+                nameBox.style.minWidth = 'min(100%, 260px)';
+                nameBox.appendChild(t._name);
+                nameRow.appendChild(nameBox);
+                t._autoStatus = webui.create('span', { class: 'f-small', role: 'status' });
+                nameRow.appendChild(t._autoStatus);
+                t._undoBtn = webui.create('webui-button', { theme: 'warning', 'start-icon': 'undo', text: 'Undo' });
+                t._undoBtn.addEventListener('click', () => t.undo());
+                nameRow.appendChild(t._undoBtn);
+                t._saveBtn = webui.create('webui-button', { theme: 'primary', 'end-icon': 'save', text: `Save ${c.label}` });
+                t._saveBtn.addEventListener('click', () => t.save());
+                nameRow.appendChild(t._saveBtn);
+                t._form.appendChild(nameRow);
+                // Save errors show under the Save button.
+                t._error = webui.create('webui-alert', { variant: 'danger' });
+                t._form.appendChild(t._error);
+                const row = webui.create('webui-flex', { wrap: '', align: 'flex-start' });
                 const prefixLabel = webui.create('label', {});
                 Object.assign(prefixLabel.style, { display: 'flex', flexDirection: 'column', fontSize: '0.9em', gap: '0.2em' });
                 prefixLabel.appendChild(document.createTextNode('Tag prefix'));
@@ -140,7 +157,8 @@
                 });
                 prefixLabel.appendChild(t._prefix);
                 row.appendChild(prefixLabel);
-                t._tagInput = webui.create('app-tag-input', { label: 'Tags', helper: 'Type a tag and press Enter' });
+                t._tagInput = webui.create('app-tag-input', { label: 'Tags', placeholder: 'Type a tag, then press Enter' });
+                t._tagInput.style.flex = '1 1 320px';
                 t._tagInput.addEventListener('tag-add', ev => {
                     ev.preventDefault();
                     t.addTag(ev.detail.tag);
@@ -156,16 +174,21 @@
                 t._form.appendChild(t._tagInput);
             }
 
-            // Two rows with one job each: the actions that keep or remove the item, then how the text is shown and copied.
-            const actions = webui.create('webui-flex', { wrap: '', gap: '2', align: 'center' });
-            t._deleteBtn = webui.create('webui-button', { theme: 'danger', 'start-icon': 'trash', text: 'Delete' });
-            t._deleteBtn.addEventListener('click', () => t.deleteItem());
-            actions.appendChild(t._deleteBtn);
-            actions.appendChild(webui.create('webui-flex', { grow: '' }));
+            // One row for how the text is shown, then copying it, then what happens to the item.
+            const bar = webui.create('webui-flex', { wrap: '', align: 'center' });
             if (!c.readOnly) {
-                t._autoStatus = webui.create('span', { class: 'f-small', role: 'status' });
-                actions.appendChild(t._autoStatus);
+                t._viewSwitch = webui.create('webui-switch', { label: 'View', options: 'Editor|Both|Rendered', value: 'Both', theme: 'secondary' });
+                t._viewSwitch.addEventListener('change', () => t.setView(viewKeys[t._viewSwitch.value] || 'both'));
+                bar.appendChild(t._viewSwitch);
             }
+            bar.appendChild(webui.create('webui-flex', { grow: '' }));
+            const copyMd = webui.create('webui-button', { theme: 'shade', 'start-icon': 'code', text: 'Copy Markdown' });
+            copyMd.addEventListener('click', () => t.copy(false));
+            bar.appendChild(copyMd);
+            const copyHtml = webui.create('webui-button', { theme: 'shade', 'start-icon': 'copy', text: 'Copy HTML' });
+            copyHtml.addEventListener('click', () => t.copy(true));
+            bar.appendChild(copyHtml);
+            const actions = bar;
             if (c.key === 'task') {
                 // Marking a task done saves it at once, like ticking a box on a to-do list.
                 t._doneBtn = webui.create('webui-button', { theme: 'shade', 'start-icon': 'check', text: 'Mark Done' });
@@ -180,33 +203,14 @@
                 t._publishBtn.addEventListener('click', () => t.publish());
                 actions.appendChild(t._publishBtn);
             }
-            if (!c.readOnly) {
-                t._undoBtn = webui.create('webui-button', { theme: 'warning', 'start-icon': 'undo', text: 'Undo' });
-                t._undoBtn.addEventListener('click', () => t.undo());
-                actions.appendChild(t._undoBtn);
-                t._saveBtn = webui.create('webui-button', { theme: 'primary', 'end-icon': 'save', text: `Save ${c.label}` });
-                t._saveBtn.addEventListener('click', () => t.save());
-                actions.appendChild(t._saveBtn);
-            }
-            t._form.appendChild(actions);
-            // Save errors show under the Save button.
-            t._error = webui.create('webui-alert', { variant: 'danger' });
-            t._form.appendChild(t._error);
-
-            const bar = webui.create('webui-flex', { wrap: '', gap: '2', align: 'center' });
-            if (!c.readOnly) {
-                t._viewSwitch = webui.create('webui-switch', { label: 'View', options: 'Editor|Both|Rendered', value: 'Both', theme: 'secondary' });
-                t._viewSwitch.addEventListener('change', () => t.setView(viewKeys[t._viewSwitch.value] || 'both'));
-                bar.appendChild(t._viewSwitch);
-            }
-            bar.appendChild(webui.create('webui-flex', { grow: '' }));
-            const copyMd = webui.create('webui-button', { theme: 'shade', 'start-icon': 'code', text: 'Copy Markdown' });
-            copyMd.addEventListener('click', () => t.copy(false));
-            bar.appendChild(copyMd);
-            const copyHtml = webui.create('webui-button', { theme: 'shade', 'start-icon': 'copy', text: 'Copy HTML' });
-            copyHtml.addEventListener('click', () => t.copy(true));
-            bar.appendChild(copyHtml);
+            t._deleteBtn = webui.create('webui-button', { theme: 'danger', 'start-icon': 'trash', text: 'Delete' });
+            t._deleteBtn.addEventListener('click', () => t.deleteItem());
+            actions.appendChild(t._deleteBtn);
             t._form.appendChild(bar);
+            if (!t._error) {
+                t._error = webui.create('webui-alert', { variant: 'danger' });
+                t._form.appendChild(t._error);
+            }
 
 
             const fields = c.fields;

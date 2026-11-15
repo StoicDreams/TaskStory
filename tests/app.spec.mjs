@@ -37,9 +37,57 @@ test.describe('app-workspace', () => {
         await expect(page.locator('app-dashboard')).toHaveCount(1);
         await expect(page.locator('app-workspace')).toContainText('Personal space (no team)');
     });
+
+    test('the dashboard guide and the Markdown guide are tabs in the Help bubble', async ({ page }) => {
+        await openSignedIn(page, '/dashboard');
+        const help = page.locator('app-workspace webui-page-help');
+        await expect(help).toHaveCount(1);
+        await expect(page.locator('app-dashboard').getByRole('button', { name: 'Markdown', exact: true })).toHaveCount(0);
+        await help.getByRole('button', { name: 'Help' }).click();
+        const tabs = help.locator('webui-tabs > [slot="tabs"]');
+        await expect(tabs).toHaveText(['Dashboard', 'Markdown']);
+        await expect(help.locator('webui-tabs')).toContainText('Manager toggles');
+        await tabs.filter({ hasText: 'Markdown' }).click();
+        await expect(help.locator('webui-markdown-guide tr[data-key="bold"]')).toBeVisible();
+        // The guides don't change the page title.
+        await expect(page).toHaveTitle(/Dashboard/);
+    });
+
+    test('a manager page has its own guide and the Markdown guide, and stories have only their guide', async ({ page }) => {
+        await openSignedIn(page, '/problems');
+        const help = page.locator('app-workspace webui-page-help');
+        await expect(help.locator('webui-tabs > [slot="tabs"]')).toHaveText(['Problems', 'Markdown']);
+        await expect(page.locator('app-workspace')).not.toContainText('Every text field supports Markdown');
+        await openPage(page, '/stories');
+        await expect(page.locator('app-item-manager')).toHaveAttribute('type', 'story');
+        const stories = page.locator('app-workspace webui-page-help');
+        await expect(stories.locator('webui-tabs')).toHaveCount(0);
+        await stories.getByRole('button', { name: 'Help' }).click();
+        await expect(stories).toContainText('the record of solved problems');
+    });
 });
 
 test.describe('app-item-manager', () => {
+    test('Undo and Save sit beside Name, and tags line up to the right of the tag box before wrapping', async ({ page }) => {
+        await page.setViewportSize({ width: 1400, height: 900 });
+        await openSignedIn(page, '/solutions');
+        const manager = page.locator('app-item-manager');
+        const middle = async locator => { const b = await locator.boundingBox(); return { x: b.x, y: b.y + b.height / 2, right: b.x + b.width, bottom: b.y + b.height }; };
+        const name = await middle(manager.getByRole('textbox', { name: 'Name' }));
+        const save = await middle(manager.getByRole('button', { name: 'Save Solution' }));
+        expect(Math.abs(save.y - name.y)).toBeLessThan(12);
+        expect(save.x).toBeGreaterThan(name.right);
+        const tags = manager.getByRole('textbox', { name: 'Tags' });
+        for (const tag of ['alpha', 'beta']) {
+            await tags.fill(tag);
+            await tags.press('Enter');
+        }
+        const box = await middle(tags);
+        const chip = await middle(manager.locator('app-tag-input').getByRole('button', { name: 'Remove tag alpha' }));
+        expect(chip.x).toBeGreaterThan(box.right);
+        expect(Math.abs(chip.y - box.y)).toBeLessThan(16);
+    });
+
     test('creates a problem with its own tag and owner, and marks unsaved changes', async ({ page }) => {
         await openSignedIn(page, '/problems');
         const manager = page.locator('app-item-manager');
