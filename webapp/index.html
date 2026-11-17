@@ -28,15 +28,18 @@
 	<link rel="dns-prefetch" href="https://api.myfi.ws" />
 	<link rel="preconnect" href="https://cdn.myfi.ws">
 	<link rel="preconnect" href="https://api.myfi.ws">
-	<link href="https://cdn.myfi.ws/css/webui.min.css" rel="preload" as="style" />
-	<link href="https://cdn.myfi.ws/webui/loader.min.js" rel="preload" as="script" />
 
 	<link href="Logo.svg" rel="icon" type="image/svg+xml" sizes="any" />
 	<link rel="manifest" href="app.webmanifest">
 
-	<link href="https://cdn.myfi.ws/css/webui.min.css" rel="stylesheet" />
+	<script>
+		// Web UI loads from the local MyFiCDN server (MyFiCDN/PowerShell/RunLocal.ps1) when the site runs on localhost,
+		// so framework changes show before they are published, and from cdn.myfi.ws everywhere else.
+		window.webuiCdn = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) ? 'http://localhost:3180/' : 'https://cdn.myfi.ws/';
+		document.write('<link href="' + webuiCdn + 'css/webui.min.css" rel="stylesheet" />');
+	</script>
 	<link data-trunk href="css/app.min.css" rel="css" />
-	<script src="https://cdn.myfi.ws/webui/loader.min.js"></script>
+	<script>document.write('<script src="' + webuiCdn + 'webui/loader.min.js"></' + 'script>');</script>
 
 	<link data-trunk href="root_files" rel="copy-dir" />
 	<link data-trunk href="d" rel="copy-dir" data-target-path="d" />

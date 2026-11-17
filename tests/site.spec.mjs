@@ -129,7 +129,8 @@ test.describe('pages', () => {
             const title = await page.evaluate(() => webui.getData('page-title'));
             expect(title, 'The page should set a title').toBeTruthy();
             expect(title).not.toBe('Page Not Found');
-            await expect.poll(() => undefinedComponents(page), { message: 'These components never loaded' }).toEqual([]);
+            // Pages such as a component list load dozens of scripts on demand, which takes a while on a slow or busy machine.
+            await expect.poll(() => undefinedComponents(page), { message: 'These components never loaded', timeout: 15000 }).toEqual([]);
         });
     }
 });

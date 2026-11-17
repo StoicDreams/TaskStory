@@ -33,8 +33,11 @@ test.describe('app-hero', () => {
         await openPage(page, '/');
         const hero = page.locator('app-hero');
         await expect(hero.locator('img')).toBeVisible();
-        const [heading, image] = await Promise.all([hero.getByRole('heading', { level: 1 }).boundingBox(), hero.locator('img').boundingBox()]);
-        expect(image.y).toBeGreaterThan(heading.y + heading.height);
+        // Polled, because the layout moves while the framework's styles load.
+        await expect.poll(async () => {
+            const [heading, image] = await Promise.all([hero.getByRole('heading', { level: 1 }).boundingBox(), hero.locator('img').boundingBox()]);
+            return image.y > heading.y + heading.height;
+        }, { message: 'the image is below the heading' }).toBe(true);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     });
 });

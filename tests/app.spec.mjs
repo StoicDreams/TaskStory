@@ -73,19 +73,26 @@ test.describe('app-item-manager', () => {
         await openSignedIn(page, '/solutions');
         const manager = page.locator('app-item-manager');
         const middle = async locator => { const b = await locator.boundingBox(); return { x: b.x, y: b.y + b.height / 2, right: b.x + b.width, bottom: b.y + b.height }; };
-        const name = await middle(manager.getByRole('textbox', { name: 'Name' }));
-        const save = await middle(manager.getByRole('button', { name: 'Save Solution' }));
-        expect(Math.abs(save.y - name.y)).toBeLessThan(12);
-        expect(save.x).toBeGreaterThan(name.right);
+        // Positions are polled, because the layout keeps moving while the framework's components and styles load,
+        // which takes longer on CI. A single read there once found Save 23px below Name.
+        const nameBox = manager.getByRole('textbox', { name: 'Name' });
+        const saveButton = manager.getByRole('button', { name: 'Save Solution' });
+        await expect.poll(async () => {
+            const name = await middle(nameBox);
+            const save = await middle(saveButton);
+            return Math.abs(save.y - name.y) < 12 && save.x > name.right;
+        }, { message: 'Save sits on the same line as Name, to its right' }).toBe(true);
         const tags = manager.getByRole('textbox', { name: 'Tags' });
         for (const tag of ['alpha', 'beta']) {
             await tags.fill(tag);
             await tags.press('Enter');
         }
-        const box = await middle(tags);
-        const chip = await middle(manager.locator('app-tag-input').getByRole('button', { name: 'Remove tag alpha' }));
-        expect(chip.x).toBeGreaterThan(box.right);
-        expect(Math.abs(chip.y - box.y)).toBeLessThan(16);
+        const alpha = manager.locator('app-tag-input').getByRole('button', { name: 'Remove tag alpha' });
+        await expect.poll(async () => {
+            const box = await middle(tags);
+            const chip = await middle(alpha);
+            return chip.x > box.right && Math.abs(chip.y - box.y) < 16;
+        }, { message: 'The first tag sits on the same line as the tag box, to its right' }).toBe(true);
     });
 
     test('creates a problem with its own tag and owner, and marks unsaved changes', async ({ page }) => {
@@ -254,8 +261,7 @@ test.describe('app-tag-filter', () => {
         await expect(filter.getByLabel('Filter by tag, then press Enter')).toBeVisible();
         await expect(more).toHaveAttribute('aria-expanded', 'false');
         await expect(filter.getByLabel('Problem Quick Filter')).toBeHidden();
-        const box = await filter.boundingBox();
-        expect(box.height, 'the closed filter is about one line tall').toBeLessThan(120);
+        await expect.poll(async () => (await filter.boundingBox()).height, { message: 'the closed filter is about one line tall' }).toBeLessThan(120);
         await more.click();
         await expect(more).toHaveAttribute('aria-expanded', 'true');
         await expect(filter.getByLabel('Problem Quick Filter')).toBeVisible();

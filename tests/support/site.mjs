@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, request as apiRequest } from '@playwright/test';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, normalize, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -200,6 +200,48 @@ export function relativeToSite(file) {
     return relative(SITE_ROOT, file).split(sep).join('/');
 }
 
+// The live-cdn project gets each framework file from cdn.myfi.ws once per test worker and keeps it, instead of once per
+// test. Thousands of requests per run meant a dropped connection (such as net::ERR_NETWORK_CHANGED) now and then,
+// which failed whichever test it hit. A failed download is retried, and if it never succeeds the browser asks itself.
+const liveCdn = new Map();
+const LIVE_CDN_ORIGIN = 'https://cdn.myfi.ws';
+// Sites load the framework from the local MyFiCDN server when they run on localhost, as the tests do, so its
+// requests are answered the same as cdn.myfi.ws: from the live CDN, or from the local-cdn project's checkout.
+const CDN_ORIGINS = new Set([LIVE_CDN_ORIGIN, 'http://localhost:3180']);
+let liveCdnClient;
+// A file takes well under a second, so a download that stalls is given up on soon enough to retry within one test.
+const LIVE_CDN_ATTEMPTS = 4;
+const LIVE_CDN_TIMEOUT = 5000;
+
+async function downloadLiveCdn(url) {
+    liveCdnClient ??= await apiRequest.newContext();
+    for (let attempt = 1; ; attempt++) {
+        try {
+            const response = await liveCdnClient.get(url, { timeout: LIVE_CDN_TIMEOUT });
+            if (response.status() < 500 || attempt === LIVE_CDN_ATTEMPTS) {
+                return { status: response.status(), contentType: response.headers()['content-type'], body: await response.body() };
+            }
+        } catch (error) {
+            if (attempt === LIVE_CDN_ATTEMPTS) return null;
+        }
+        await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+    }
+}
+
+async function serveLiveCdn(route, headers) {
+    const request = route.request();
+    if (request.method() !== 'GET') return route.continue();
+    const url = `${LIVE_CDN_ORIGIN}${new URL(request.url()).pathname}`;
+    if (!liveCdn.has(url)) liveCdn.set(url, downloadLiveCdn(url));
+    const file = await liveCdn.get(url);
+    if (!file) {
+        liveCdn.delete(url);
+        // The browser can ask cdn.myfi.ws itself, but never the local server, so the tests do not depend on it running.
+        return new URL(request.url()).origin === LIVE_CDN_ORIGIN ? route.continue() : route.abort();
+    }
+    return route.fulfill({ headers, status: file.status, contentType: file.contentType, body: file.body });
+}
+
 function serve(route, origin, cdnDir) {
     const request = route.request();
     const url = new URL(request.url());
@@ -211,11 +253,12 @@ function serve(route, origin, cdnDir) {
     if (url.hostname === 'api.myfi.ws') {
         return route.fulfill({ headers, contentType: 'text/plain', body: '0' });
     }
-    if (url.hostname === 'cdn.myfi.ws') {
-        if (!cdnDir) return route.continue();
+    if (CDN_ORIGINS.has(url.origin)) {
+        if (!cdnDir) return serveLiveCdn(route, headers);
         const file = inside(cdnDir, url.pathname);
         if (file) return route.fulfill({ headers, contentType: MIME[extname(file)] || 'application/octet-stream', body: readFileSync(file) });
-        return route.continue();
+        if (url.origin === LIVE_CDN_ORIGIN) return route.continue();
+        return route.fulfill({ headers, status: 404, contentType: 'text/plain', body: 'Not Found' });
     }
     if (url.origin !== origin) {
         // Analytics, embeds, and other outside requests are blocked, so tests never count as real visits.
