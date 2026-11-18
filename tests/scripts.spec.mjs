@@ -188,6 +188,47 @@ if ($env:PUBLISH_THROW -eq '${name}') { throw '${name} broke' }
         expect(noComponents.ran).toEqual([...steps, 'npm-test']);
     });
 
+    // A stand-in webapp_post_build, first on the PATH, that logs its arguments and folder, or fails.
+    function fakePostBuild() {
+        const bin = join(tempFolder(), 'bin');
+        write(bin, 'webapp_post_build', '#!/bin/sh\necho "webapp_post_build $* in=$(pwd)" >> "$PUBLISH_LOG"\n[ "$PUBLISH_FAIL" = "webapp_post_build" ] && exit 5\nexit 0\n');
+        chmodSync(join(bin, 'webapp_post_build'), 0o755);
+        write(bin, 'webapp_post_build.cmd', '@echo webapp_post_build %* in=%CD%>> "%PUBLISH_LOG%"\r\n@if "%PUBLISH_FAIL%"=="webapp_post_build" exit /b 5\r\n@exit /b 0\r\n');
+        const pathKey = Object.keys(process.env).find(key => key.toUpperCase() === 'PATH') || 'PATH';
+        return { [pathKey]: bin + (process.platform === 'win32' ? ';' : ':') + process.env[pathKey] };
+    }
+    const sitePages = { 'webapp/d/root.md': '# Home' };
+
+    test('prerenders the pages in webapp after the other steps and before the screenshots and tests', () => {
+        const result = publish([], fakePostBuild(), { ...sitePages, ...screenshots, ...packageJson({ test: logLine('npm-test') }) });
+        expect(result.code, result.output).toBe(0);
+        expect(result.ran).toEqual([...steps, 'webapp_post_build', 'screenshots', 'npm-test']);
+        const prerender = result.lines.find(line => line.startsWith('webapp_post_build'));
+        expect(prerender).toContain('webapp_post_build prerender in=');
+        expect(prerender).toContain(`in=${join(result.dir, 'webapp')}`);
+        expect(result.output).toContain('Prerender the pages');
+    });
+
+    test('does not prerender when the project has no pages in webapp/d', () => {
+        const result = publish([], fakePostBuild());
+        expect(result.code, result.output).toBe(0);
+        expect(result.ran).toEqual(steps);
+    });
+
+    test('-SkipPrerender leaves out the prerendered pages', () => {
+        const result = publish(['-SkipPrerender'], fakePostBuild(), sitePages);
+        expect(result.code, result.output).toBe(0);
+        expect(result.ran).toEqual(steps);
+    });
+
+    test('a failed prerender stops Publish before the screenshots and tests', () => {
+        const result = publish([], { ...fakePostBuild(), PUBLISH_FAIL: 'webapp_post_build' }, { ...sitePages, ...screenshots, ...packageJson({ test: logLine('npm-test') }) });
+        expect(result.code).not.toBe(0);
+        expect(result.ran).toEqual([...steps, 'webapp_post_build']);
+        expect(result.output).toContain('Prerender the pages failed with exit code 5');
+        expect(result.output).not.toContain('Ready to commit.');
+    });
+
     test('a failed worker build stops Publish before the UI tests', () => {
         const result = publish([], { ...fakeWasmPack(), PUBLISH_FAIL: 'wasm-pack' }, { ...packageJson({ test: logLine('npm-test') }), ...workerTool });
         expect(result.code).not.toBe(0);

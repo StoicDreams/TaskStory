@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-QX5XYHV99J"></script>
+	<script>
+		if (location.hostname !== 'localhost') {
+			window.dataLayer = window.dataLayer || [];
+			function gtag() { dataLayer.push(arguments); }
+			gtag('js', new Date());
+			gtag('config', 'G-QX5XYHV99J');
+		}
+	</script>
+	<title>Continuous Agile Software Engineering</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="index, follow">
+	<base href="/" />
+	<script type="text/javascript">
+		navigator.serviceWorker.register('service-worker.min.js');
+	</script>
+
+	<link rel="dns-prefetch" href="https://cdn.myfi.ws" />
+	<link rel="dns-prefetch" href="https://api.myfi.ws" />
+	<link rel="preconnect" href="https://cdn.myfi.ws">
+	<link rel="preconnect" href="https://api.myfi.ws">
+
+	<link href="Logo.svg?v=b9dbb8035f" rel="icon" type="image/svg+xml" sizes="any" />
+	<link rel="manifest" href="app.webmanifest?v=bcbb931b5e">
+
+	<script>
+		// Web UI loads from the local MyFiCDN server (MyFiCDN/PowerShell/RunLocal.ps1) when the site runs on localhost,
+		// so framework changes show before they are published, and from cdn.myfi.ws everywhere else.
+		window.webuiCdn = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) ? 'http://localhost:3180/' : 'https://cdn.myfi.ws/';
+		document.write('<link href="' + webuiCdn + 'css/webui.min.css" rel="stylesheet" />');
+	</script>
+	<link href="css/app.min.css?v=d5706ae157" rel="stylesheet" />
+	<script>document.write('<script src="' + webuiCdn + 'webui/loader.min.js"></' + 'script>');</script>
+
+	<!-- Prerendered pages from webapp_post_build prerender. Release builds copy them to the site root. -->
+
+	<!--Web Worker-->
+	<script type="module" src="main.js?v=cea15cbf4f"></script>
+	<!--End Web Worker-->
+
+	<meta name="theme-color" content="#c1570b" />
+
+	<meta name="author" content="Erik Gassler">
+	<meta name="description" content="How Continuous Agile Software Engineering works and how Task Story applies it: problems before solutions, tags over hierarchies, and light documentation.">
+
+	<meta property="og:image" content="https://www.taskstory.com/img/share.png">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt" content="Task Story: Track the problem, not just the ticket.">
+	<meta property="og:title" content="Continuous Agile Software Engineering">
+	<meta property="og:url" content="https://www.taskstory.com/continuous-agile-software-engineering">
+	<meta property="og:description" content="How Continuous Agile Software Engineering works and how Task Story applies it: problems before solutions, tags over hierarchies, and light documentation.">
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Continuous Agile Software Engineering">
+	<meta name="twitter:url" content="https://www.taskstory.com/continuous-agile-software-engineering">
+	<meta name="twitter:site" content="@stoicdreamsllc">
+	<meta name="twitter:description" content="How Continuous Agile Software Engineering works and how Task Story applies it: problems before solutions, tags over hierarchies, and light documentation.">
+	<meta name="twitter:image" content="https://www.taskstory.com/img/share.png">
+	<link rel="canonical" href="https://www.taskstory.com/continuous-agile-software-engineering" />
+	<link rel="modulepreload" href="https://cdn.myfi.ws/js/mdparse.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/alerts.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/app.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/app-config.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/button.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/data.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/drawer.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/feedback.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/flex.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/icon.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/link.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/myfi-info.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/nav.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/next-page.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/page-footer.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/sideimage.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/stoic-dreams-logo.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/stoic-social-links.min.js" crossorigin="anonymous" />
+	<meta name="webui-prerender" content="3846e74420">
+</head>
+
+<body>
+	<webui-app-config src="appConfig.json"></webui-app-config>
+	<webui-app data-removeclass=".nav|open;.shared|open">
+		<div data-prerendered>
+<p>Some teams ship a new feature every week or two, while others spend months on a handful. The difference is rarely talent, and it is not shortcuts on security or testing. It is usually the workflow: how the team decides what to work on, how it explores options, and how quickly it learns from what it shipped.</p>
+<p>Continuous Agile Software Engineering (CASE) is the workflow Task Story is built around. This page explains the ideas behind it and how each one shows up in the app.</p>
+<p>On this page:</p>
+<ul>
+<li><a href="#mindset">Agile is a mindset, not a ceremony</a></li>
+<li><a href="#problem-first">Start with the problem</a></li>
+<li><a href="#solutions">Explore more than one solution</a></li>
+<li><a href="#stories">Record what you dropped, not just what you shipped</a></li>
+<li><a href="#tags">Organize with tags, not hierarchies</a></li>
+<li><a href="#documentation">Keep documentation light</a></li>
+<li><a href="#try-it">Try it with your team</a></li>
+</ul>
+<h2>Agile is a mindset, not a ceremony {#mindset}</h2>
+<p>True agile development is developer driven. Developers keep evaluating and adapting to new problems, using what they learned from earlier work, from mistakes, and from customer feedback. That means using the best tool and workflow for each job, even when the answer changes from one task to the next.</p>
+<p>CASE takes this one step further: work moves in small, finished pieces, so the team gets feedback early and often, instead of saving everything for a large release.</p>
+<h2>Start with the problem {#problem-first}</h2>
+<p>Most trackers start with a ticket that already describes a fix. By then the team has quietly chosen a solution before it understands the problem.</p>
+<p>In Task Story, a problem is written up on its own first: who has it, what it is, where and when it happens, why it matters, and how to reproduce it. Solutions come later, as separate items.</p>
+
+<h3>Questions that define a problem</h3>
+<ul>
+<li><strong>Who</strong> is having this problem?</li>
+<li><strong>What</strong> is the problem?</li>
+<li><strong>Where</strong> does it happen?</li>
+<li><strong>When</strong> does it happen?</li>
+<li><strong>Why</strong> is it a problem?</li>
+<li><strong>How</strong> can it be reproduced?</li>
+</ul>
+
+<h2>Explore more than one solution {#solutions}</h2>
+<p>A problem worth solving usually has more than one possible answer. Writing each one down as its own solution, with its own investigation, testing, and development notes, lets the team compare them honestly and move quickly from one to the next when an approach does not work out.</p>
+<p>Each solution is linked to its problem by a tag, and has an owner who drives it.</p>
+<h2>Record what you dropped, not just what you shipped {#stories}</h2>
+<p>When the work is finished, the problem and its solutions are published together as a story. The story keeps the solutions you implemented and the ones you dropped, with the notes explaining why.</p>
+
+<p>That history is easy to lose in other tools, where closed tickets disappear and rejected ideas were never written down. In Task Story it stays searchable by tag, so the next person to face a similar problem starts with what the team already learned.</p>
+
+<h2>Organize with tags, not hierarchies {#tags}</h2>
+<p>Deep trees of epics, stories, and subtasks take time to maintain and rarely match how the work really connects. Task Story links everything with tags instead:</p>
+<ul>
+<li>Projects, features, problems, and solutions tag themselves from their names, such as <code>project:customerportal</code> or <code>problem:checkouttimeouts</code>.</li>
+<li>The creator of a problem or solution is tagged as its owner, such as <code>person:alex</code>.</li>
+<li>You add any other tags you need, such as <code>bug</code> or <code>blocked</code>.</li>
+</ul>
+<p>Filtering the dashboard by a tag shows everything connected to it, across every list, at once.</p>
+<h2>Keep documentation light {#documentation}</h2>
+<p>Documentation should support the work, not compete with it. Task Story gives each item a short, guided set of fields, so the team writes what matters and gets back to building. Everything is written in Markdown and can be copied out as Markdown or HTML.</p>
+<h2>Try it with your team {#try-it}</h2>
+<p>Task Story is free for one developer, and Team plans add a shared space with a seat for each teammate.</p>
+
+<p>Try It Free
+Read the Workflow Guide
+Read about CASE</p>
+		</div>
+		<webui-drawer slot="left" class="nav elevation-20" docked="true" data-state="slot|docked" data-moveable data-dockable>
+			<webui-flex justify="center" slot="header">
+				<webui-stoic-dreams-logo title="Task Story Logo" text="Task" text2="Story"></webui-stoic-dreams-logo>
+			</webui-flex>
+			<webui-nav routes="/nav.json" data-subscribe="app-nav-routes:setNavRoutes"></webui-nav>
+		</webui-drawer>
+		<webui-drawer slot="right" class="shared elevation-20" data-stopclick data-moveable data-state="slot">
+		</webui-drawer>
+		<header slot="header">
+			<button aria-label="open navigation menu" data-toggleclass=".nav|open" class="elevation-10 pa-1 mx-1">
+				<webui-icon icon="hamburger"></webui-icon>
+			</button>
+			<h1 data-subscribe="page-title:innerHTML">Continuous Agile Software Engineering</h1>
+			<h2 data-subscribe="page-subtitle:innerHTML"></h2>
+			<webui-flex grow></webui-flex>
+			<webui-feedback title="Provide us your feedback" data-post="https://api.myfi.ws/feedback/new" data-json-name="message">
+				<p>You can also come <a href="https://discord.gg/5X4YSDFdHD">chat with us on the Stoic Dreams discord server.</a></p>
+			</webui-feedback>
+			<webui-alerts title="View your notifications" data-title="My Alerts" data-toggleclass=".shared|open"></webui-alerts>
+			<webui-myfi-info sign-in-label="Sign In">
+				<template slot="panel-content">
+					<webui-flex column gap="2">
+						<webui-link href="/dashboard" icon="grid">My Dashboard</webui-link>
+						<webui-link href="/account" icon="users">Profile and Teams</webui-link>
+					</webui-flex>
+				</template>
+			</webui-myfi-info>
+		</header>
+		<noscript>Javascript is required to view this site</noscript>
+		<webui-page-footer copyright="2016" company="Stoic Dreams">
+			<webui-next-page theme="tertiary" data-subscribe="page-next-page"></webui-next-page>
+			<webui-flex class="my-3" justify="center" wrap>
+				<webui-link href="/about" icon="circle_exclamation|backing|bordered">About Task Story</webui-link>
+				<webui-link href="/contact" icon="messages|fill|shade:tri">Contact Stoic Dreams</webui-link>
+				<webui-link href="/privacy" icon="shield_exclamation|backing|bordered">Privacy</webui-link>
+				<webui-link href="/terms" icon="handshake|fill|shade:tri">Terms & Conditions</webui-link>
+			</webui-flex>
+			<webui-stoic-social-links class="mb-2"></webui-stoic-social-links>
+		</webui-page-footer>
+	</webui-app>
+</body>
+
+</html>

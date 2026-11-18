@@ -1,4 +1,4 @@
-<webui-data data-page-title="Task Story" data-page-subtitle=""></webui-data>
+<webui-data data-page-title="Task Story" data-page-subtitle="" data-page-description="Project management for software teams: define the problem, try several solutions, and publish a story of what shipped and what you dropped."></webui-data>
 
 <app-hero image="/img/screenshots/dashboard.png" alt="The Task Story dashboard, with a team's problems, solutions, and tasks side by side">
 

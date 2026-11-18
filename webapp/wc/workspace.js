@@ -5,7 +5,7 @@
  */
 "use strict"
 {
-    // Each manager's help page, named as in the menu: /d/help/{name}-guide.md.
+    // Each manager's help page, named as in the menu: /d/content/help/{name}-guide.md.
     const guideNames = { project: 'Projects', feature: 'Features', problem: 'Problems', solution: 'Solutions', task: 'Tasks', story: 'Stories' };
     webui.define('app-workspace', {
         preload: 'app:store button flex paper quote input-text page-help tabs content',
@@ -129,7 +129,7 @@
             if (view === 'dashboard' || (view === 'manager' && type !== 'story')) guides.push({ label: 'Markdown', file: 'markdown' });
             if (!guides.length) return null;
             const help = webui.create('webui-page-help', { heading: 'Help', 'storage-key': 'taskstory-help' });
-            const guide = g => webui.create('webui-content', { src: `/d/help/${g.file}-guide.md`, cache: '', nodetach: '', preload: '' });
+            const guide = g => webui.create('webui-content', { src: `/d/content/help/${g.file}-guide.md`, cache: '', nodetach: '', preload: '' });
             if (guides.length === 1) {
                 help.appendChild(guide(guides[0]));
                 return help;

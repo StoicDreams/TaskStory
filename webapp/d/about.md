@@ -1,4 +1,4 @@
-<webui-data data-page-title="About {APP_NAME}" data-page-subtitle=""></webui-data>
+<webui-data data-page-title="About {APP_NAME}" data-page-subtitle="" data-page-description="Task Story is a project tracker built on Continuous Agile Software Engineering, made by Stoic Dreams. See the approach behind it and the team that builds it."></webui-data>
 
 ## About Task Story
 

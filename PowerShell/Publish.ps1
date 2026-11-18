@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Prepares the site for a commit: updates the Rust dependencies, increments the version, minifies the CSS and JavaScript, rebuilds the sitemap, updates the screenshots, and runs the tests that CI runs.
+Prepares the site for a commit: updates the Rust dependencies, increments the version, minifies the CSS and JavaScript, rebuilds the sitemap, prerenders the pages, updates the screenshots, and runs the tests that CI runs.
 
 .DESCRIPTION
 Select this script in Task Proxy's Git Controller to run it before every commit. If any step fails, the commit is cancelled.
@@ -20,6 +20,9 @@ Do not regenerate the .min.js and .min.css files.
 .PARAMETER SkipSiteMap
 Do not rebuild sitemap.xml.
 
+.PARAMETER SkipPrerender
+Do not rewrite the prerendered pages in webapp/pages. Publish only writes them when the site has pages in webapp/d.
+
 .PARAMETER SkipScreenshots
 Do not run PowerShell/screenshots.ps1. Publish only runs it when the project has one.
 
@@ -34,6 +37,7 @@ param(
     [switch]$SkipIncrementVersion,
     [switch]$SkipMinify,
     [switch]$SkipSiteMap,
+    [switch]$SkipPrerender,
     [switch]$SkipScreenshots,
     [switch]$SkipTests
 )
@@ -72,6 +76,26 @@ function Build-Worker {
     Push-Location 'webapp'
     try {
         Invoke-Check 'Build the Rust worker for the UI tests' { wasm-pack build --target web --out-dir pkg }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+# The HTML file for each page that release builds serve, with its own title, description, and text for search engines
+# and link previews. They are committed, so the server builds nothing but the site itself.
+function Build-Pages {
+    if (-not (Get-Command webapp_post_build -ErrorAction SilentlyContinue)) {
+        throw 'Prerendering the pages needs webapp_post_build. Install it with: cargo install webapp_post_build --git https://github.com/StoicDreams/WebUI'
+    }
+    Push-Location 'webapp'
+    try {
+        $global:LASTEXITCODE = 0
+        Write-Host '== Prerender the pages' -ForegroundColor Cyan
+        webapp_post_build prerender
+        if ($LASTEXITCODE) {
+            throw "Prerender the pages failed with exit code $LASTEXITCODE. If webapp_post_build has no prerender command, update it with: cargo install webapp_post_build --git https://github.com/StoicDreams/WebUI --force"
+        }
     }
     finally {
         Pop-Location
@@ -118,6 +142,9 @@ try {
     }
     if (-not $SkipMinify) { Invoke-Step 'Minify CSS and JavaScript' 'Minify.ps1' }
     if (-not $SkipSiteMap) { Invoke-Step 'Build the sitemap' 'BuildSiteMap.ps1' }
+    # After Minify, since each page links to the minified CSS by a hash of it, and before the screenshots and tests,
+    # which open the prerendered pages the way the deployed site serves them.
+    if (-not $SkipPrerender -and (Test-Path 'webapp/d')) { Build-Pages }
     # Screenshots are taken from the minified files, and before the tests, so the tests check the new images.
     if (-not $SkipScreenshots -and (Test-Path (Join-Path $PSScriptRoot 'screenshots.ps1'))) { Invoke-Step 'Update the screenshots' 'screenshots.ps1' }
     if (-not $SkipTests) { Invoke-Tests }

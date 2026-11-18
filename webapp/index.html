@@ -38,16 +38,20 @@
 		window.webuiCdn = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) ? 'http://localhost:3180/' : 'https://cdn.myfi.ws/';
 		document.write('<link href="' + webuiCdn + 'css/webui.min.css" rel="stylesheet" />');
 	</script>
-	<link data-trunk href="css/app.min.css" rel="css" />
+	<link href="css/app.min.css" rel="stylesheet" />
 	<script>document.write('<script src="' + webuiCdn + 'webui/loader.min.js"></' + 'script>');</script>
 
 	<link data-trunk href="root_files" rel="copy-dir" />
 	<link data-trunk href="d" rel="copy-dir" data-target-path="d" />
 	<link data-trunk href="wc" rel="copy-dir" data-target-path="wc" />
+	<link data-trunk href="css" rel="copy-dir" data-target-path="css" />
+	<!-- Prerendered pages from webapp_post_build prerender. Release builds copy them to the site root. -->
+	<link data-trunk href="pages" rel="copy-dir" data-target-path="pages" />
 	<link data-trunk href="pkg" rel="copy-dir" data-target-path="/" />
 
 	<!--Web Worker-->
-	<script data-trunk type="module" src="src-js/main.js"></script>
+	<script type="module" src="main.js"></script>
+	<link data-trunk href="src-js/main.js" rel="copy-file" data-target-path="/" />
 	<link data-trunk href="src-js/worker.js" rel="copy-file" data-target-path="/" />
 	<!--End Web Worker-->
 

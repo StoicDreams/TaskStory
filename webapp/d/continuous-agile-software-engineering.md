@@ -1,4 +1,4 @@
-<webui-data data-page-title="Continuous Agile Software Engineering" data-page-subtitle=""></webui-data>
+<webui-data data-page-title="Continuous Agile Software Engineering" data-page-subtitle="" data-page-description="How Continuous Agile Software Engineering works and how Task Story applies it: problems before solutions, tags over hierarchies, and light documentation."></webui-data>
 
 Some teams ship a new feature every week or two, while others spend months on a handful. The difference is rarely talent, and it is not shortcuts on security or testing. It is usually the workflow: how the team decides what to work on, how it explores options, and how quickly it learns from what it shipped.
 

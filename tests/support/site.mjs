@@ -1,4 +1,5 @@
 import { test as base, expect, request as apiRequest } from '@playwright/test';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, normalize, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +9,8 @@ export const SITE_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 export const WEBAPP = join(SITE_ROOT, 'webapp');
 export const ROOT_FILES = join(WEBAPP, 'root_files');
 export const PAGES = join(WEBAPP, 'd');
+// The prerendered pages, written by `webapp_post_build prerender` and committed. Release builds serve them from the site root.
+export const PRERENDERED = join(WEBAPP, 'pages');
 
 
 const MIME = {
@@ -47,6 +50,40 @@ function appShell() {
             return /rel="css"/.test(tag) && href ? `<link href="${href}" rel="stylesheet" />` : '';
         })
         .replace(/<script\b([^>]*)\bdata-trunk\b/g, '<script$1');
+}
+
+/**
+ * The prerendered file in webapp/pages for a route, or null. IIS serves /about from about.html, and the home page
+ * and every address without a file of its own from index.html, which a release build replaces with pages/index.html.
+ */
+export function prerenderedFile(route) {
+    const path = route.replace(/[?#].*$/, '').replace(/\/+$/, '').toLowerCase();
+    return inside(PRERENDERED, path === '' || path === '/index.html' ? 'index.html' : `${path}.html`);
+}
+
+/** The HTML the deployed site serves for an address: its prerendered page, or the app shell. */
+function servedHtml(pathname) {
+    const file = prerenderedFile(pathname) || prerenderedFile('/');
+    return file ? readText(file) : appShell();
+}
+
+/**
+ * The version webapp_post_build writes for files, in the ?v= of links and the webui-prerender meta tag: the first 10
+ * hex digits of a SHA-256 of the files joined by a zero byte, with Windows line endings read as Unix ones.
+ */
+export function sourceVersion(...files) {
+    const hash = createHash('sha256');
+    files.forEach((bytes, index) => {
+        if (index) hash.update(Buffer.from([0]));
+        hash.update(Buffer.from(Buffer.from(bytes).toString('latin1').replace(/\r\n/g, '\n'), 'latin1'));
+    });
+    return hash.digest('hex').slice(0, 10);
+}
+
+/** The route of a markdown file under webapp/d. d/root.md is "/". */
+export function fileToRoute(file) {
+    const path = relative(PAGES, file).split(sep).join('/').replace(/\.md$/, '').toLowerCase();
+    return path === 'root' ? '/' : `/${path}`;
 }
 
 /** The site's own domain, read from the og:url in index.html. */
@@ -265,7 +302,7 @@ function serve(route, origin, cdnDir) {
         return route.abort();
     }
     if (url.pathname === '/' || url.pathname === '/index.html') {
-        return route.fulfill({ contentType: 'text/html', body: appShell() });
+        return route.fulfill({ contentType: 'text/html', body: servedHtml('/') });
     }
     const file = resolveSiteFile(url.pathname);
     if (file) {
@@ -274,8 +311,8 @@ function serve(route, origin, cdnDir) {
     if (extname(url.pathname)) {
         return route.fulfill({ headers, status: 404, contentType: 'text/plain', body: 'Not Found' });
     }
-    // Page routes fall back to the app shell, the same as the deployed site.
-    return route.fulfill({ contentType: 'text/html', body: appShell() });
+    // Page routes get their prerendered page, or fall back to the home page, the same as the deployed site.
+    return route.fulfill({ contentType: 'text/html', body: servedHtml(url.pathname) });
 }
 
 export const test = base.extend({

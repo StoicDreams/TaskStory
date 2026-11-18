@@ -1,10 +1,11 @@
-import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     test, expect, openPage, undefinedComponents,
     WEBAPP, ROOT_FILES, readJson, readText, siteOrigin, pageFiles, routeToFile, navRoutes, sitemapUrls,
-    pageRoutes, screenshotRoutes, pageScreenshotFile, pageRoles, signIn, expectSignedIn, isDynamicRoute, resolveSiteFile, relativeToSite, themeVariables, themeContrastProblems, normalizeThemeValue,
+    pageRoutes, screenshotRoutes, pageScreenshotFile, pageRoles, signIn, expectSignedIn, isDynamicRoute, resolveSiteFile, relativeToSite,
+    PRERENDERED, prerenderedFile, sourceVersion, fileToRoute, themeVariables, themeContrastProblems, normalizeThemeValue,
 } from './support/site.mjs';
 
 // These checks are the same in every site, so change them in every site at once.
@@ -95,6 +96,78 @@ test.describe('site files', () => {
     });
 });
 
+// Release builds serve these pages, so search engines and link previews get each page's own title, description, and
+// text without running JavaScript. Publish.ps1 writes them with `webapp_post_build prerender`, before the tests.
+const REGENERATE = 'Regenerate with: pwsh ./PowerShell/Publish.ps1, or webapp_post_build prerender in webapp';
+const DESCRIPTION_LENGTH = { min: 50, max: 160 };
+
+/** Markdown files the build prerenders: every page except dynamic routes. */
+function prerenderedPages() {
+    return pageFiles().map(file => ({ file, route: fileToRoute(file) })).filter(({ route }) => !isDynamicRoute(route));
+}
+
+test.describe('prerendered pages', () => {
+    test(`every page sets a description of ${DESCRIPTION_LENGTH.min} to ${DESCRIPTION_LENGTH.max} characters`, () => {
+        // Search results and link previews show it. Without one, the build cuts the page's first paragraph short.
+        const problems = [];
+        for (const { file } of prerenderedPages()) {
+            // The app and the build read every webui-data tag on the page, and a later value wins.
+            const description = [...readText(file).matchAll(/<webui-data\b[^>]*>/gi)]
+                .map(tag => tag[0].match(/\bdata-page-description="([^"]*)"/i)?.[1]).filter(v => v !== undefined).at(-1)?.trim();
+            if (!description) problems.push(`${relativeToSite(file)}: no data-page-description`);
+            else if (description.length < DESCRIPTION_LENGTH.min || description.length > DESCRIPTION_LENGTH.max) {
+                problems.push(`${relativeToSite(file)}: ${description.length} characters`);
+            }
+        }
+        expect(problems).toEqual([]);
+    });
+
+    test('every page has a prerendered file', () => {
+        const missing = prerenderedPages().filter(({ route }) => !prerenderedFile(route)).map(({ route }) => route);
+        expect(missing, REGENERATE).toEqual([]);
+    });
+
+    test('webapp/pages has no file for a page that was removed', () => {
+        const routes = new Set(prerenderedPages().map(({ route }) => route));
+        const extra = [];
+        const walk = dir => {
+            for (const name of readdirSync(dir)) {
+                const file = join(dir, name);
+                if (statSync(file).isDirectory()) { walk(file); continue; }
+                const path = relative(PRERENDERED, file).split(sep).join('/');
+                const route = path === 'index.html' ? '/' : `/${path.replace(/\.html$/, '')}`;
+                if (!routes.has(route)) extra.push(path);
+            }
+        };
+        if (existsSync(PRERENDERED)) walk(PRERENDERED);
+        expect(extra, REGENERATE).toEqual([]);
+    });
+
+    test('prerendered pages were written from the current index.html, appConfig.json, and page', () => {
+        // The app keeps the header, footer, and drawers from the page it was served, so a stale page shows an old shell.
+        const index = readFileSync(join(WEBAPP, 'index.html')), config = readFileSync(join(ROOT_FILES, 'appConfig.json'));
+        const stale = prerenderedPages().filter(({ route }) => prerenderedFile(route)).filter(({ file, route }) => {
+            const written = readText(prerenderedFile(route)).match(/<meta name="webui-prerender" content="([0-9a-f]+)">/)?.[1];
+            return written !== sourceVersion(index, config, readFileSync(file));
+        }).map(({ route }) => route);
+        expect(stale, REGENERATE).toEqual([]);
+    });
+
+    test('prerendered pages link to the current CSS and JavaScript', () => {
+        // The ?v= is a hash of the file, so browsers fetch it again when it changes.
+        const stale = new Set();
+        for (const { route } of prerenderedPages()) {
+            const file = prerenderedFile(route);
+            if (!file) continue;
+            for (const [, path, version] of readText(file).matchAll(/(?:href|src)="([^"?#:]+)\?v=([0-9a-f]+)"/g)) {
+                const asset = resolveSiteFile(`/${path.replace(/^\/+/, '')}`);
+                if (!asset || sourceVersion(readFileSync(asset)) !== version) stale.add(path);
+            }
+        }
+        expect([...stale], REGENERATE).toEqual([]);
+    });
+});
+
 test.describe('pages', () => {
     test('every page in nav.json has a screenshot from screenshots/pages.shots.mjs', () => {
         // PowerShell/screenshots.ps1 takes them, and Publish.ps1 runs it before the tests.
@@ -123,6 +196,8 @@ test.describe('pages', () => {
             await expect.poll(title, { message: 'The page should set a title' }).toBeTruthy();
             await expect.poll(title).not.toBe('Page Not Found');
             await expect.poll(() => undefinedComponents(page), { message: 'These components never loaded' }).toEqual([]);
+            // The app's own rendering replaces the prerendered text, so it never shows twice.
+            await expect(page.locator('[data-prerendered]')).toHaveCount(0);
         });
     }
 });

@@ -1,4 +1,4 @@
-<webui-data data-page-title="Task Story Plans & Pricing" data-page-subtitle=""></webui-data>
+<webui-data data-page-title="Task Story Plans & Pricing" data-page-subtitle="" data-page-description="Compare Task Story plans, from the free Single Developer plan to Team plans with shared space, and read how seats and story retention work."></webui-data>
 
 ## Plans
 

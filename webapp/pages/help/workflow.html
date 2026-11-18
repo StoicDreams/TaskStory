@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-QX5XYHV99J"></script>
+	<script>
+		if (location.hostname !== 'localhost') {
+			window.dataLayer = window.dataLayer || [];
+			function gtag() { dataLayer.push(arguments); }
+			gtag('js', new Date());
+			gtag('config', 'G-QX5XYHV99J');
+		}
+	</script>
+	<title>Help: Workflow</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="index, follow">
+	<base href="/" />
+	<script type="text/javascript">
+		navigator.serviceWorker.register('service-worker.min.js');
+	</script>
+
+	<link rel="dns-prefetch" href="https://cdn.myfi.ws" />
+	<link rel="dns-prefetch" href="https://api.myfi.ws" />
+	<link rel="preconnect" href="https://cdn.myfi.ws">
+	<link rel="preconnect" href="https://api.myfi.ws">
+
+	<link href="Logo.svg?v=b9dbb8035f" rel="icon" type="image/svg+xml" sizes="any" />
+	<link rel="manifest" href="app.webmanifest?v=bcbb931b5e">
+
+	<script>
+		// Web UI loads from the local MyFiCDN server (MyFiCDN/PowerShell/RunLocal.ps1) when the site runs on localhost,
+		// so framework changes show before they are published, and from cdn.myfi.ws everywhere else.
+		window.webuiCdn = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) ? 'http://localhost:3180/' : 'https://cdn.myfi.ws/';
+		document.write('<link href="' + webuiCdn + 'css/webui.min.css" rel="stylesheet" />');
+	</script>
+	<link href="css/app.min.css?v=d5706ae157" rel="stylesheet" />
+	<script>document.write('<script src="' + webuiCdn + 'webui/loader.min.js"></' + 'script>');</script>
+
+	<!-- Prerendered pages from webapp_post_build prerender. Release builds copy them to the site root. -->
+
+	<!--Web Worker-->
+	<script type="module" src="main.js?v=cea15cbf4f"></script>
+	<!--End Web Worker-->
+
+	<meta name="theme-color" content="#c1570b" />
+
+	<meta name="author" content="Erik Gassler">
+	<meta name="description" content="The recommended team workflow in Task Story: define problems first, give each item one owner, and move work in short, finished iterations.">
+
+	<meta property="og:image" content="https://www.taskstory.com/img/share.png">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt" content="Task Story: Track the problem, not just the ticket.">
+	<meta property="og:title" content="Help: Workflow">
+	<meta property="og:url" content="https://www.taskstory.com/help/workflow">
+	<meta property="og:description" content="The recommended team workflow in Task Story: define problems first, give each item one owner, and move work in short, finished iterations.">
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Help: Workflow">
+	<meta name="twitter:url" content="https://www.taskstory.com/help/workflow">
+	<meta name="twitter:site" content="@stoicdreamsllc">
+	<meta name="twitter:description" content="The recommended team workflow in Task Story: define problems first, give each item one owner, and move work in short, finished iterations.">
+	<meta name="twitter:image" content="https://www.taskstory.com/img/share.png">
+	<link rel="canonical" href="https://www.taskstory.com/help/workflow" />
+	<link rel="modulepreload" href="https://cdn.myfi.ws/js/mdparse.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/alerts.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/app.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/app-config.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/data.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/drawer.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/feedback.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/flex.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/icon.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/link.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/myfi-info.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/nav.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/next-page.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/page-footer.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/quote.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/stoic-dreams-logo.min.js" crossorigin="anonymous" />
+	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/stoic-social-links.min.js" crossorigin="anonymous" />
+	<meta name="webui-prerender" content="5fc57811c3">
+</head>
+
+<body>
+	<webui-app-config src="appConfig.json"></webui-app-config>
+	<webui-app data-removeclass=".nav|open;.shared|open">
+		<div data-prerendered>
+<h2>Recommended team workflow</h2>
+<p>Modern teams need tools and standards that help them organize software development, so they spend their time solving problems and delivering solutions in shorter cycles with better user experiences.</p>
+<p>Task Story organizes that work by starting with the problems that need solving. Whoever declares a problem focuses on defining it well, without worrying about solutions yet.</p>
+<h2>Ownership</h2>
+<p>Ownership drives iterative development with short release cycles.</p>
+<p>Each part of the workflow (project, feature, problem, solution, and task) has exactly one owner at a time, and ownership can move between people as the work progresses. One owner doesn't mean only one person works on it. The owner takes the lead and makes the final decisions, weighing the team's discussion, facts, and opinions.</p>
+<p>In Task Story the owner is the item's <code>person:</code> tag. Whoever saves a new item becomes its owner. To take over a problem or solution, remove the current owner's tag and save.</p>
+
+<p>When someone declares a new problem, they are its first owner. They describe who is having the problem, what the problem is, where and when it happens, why it is a problem, and how to reproduce it.</p>
+<p>When a developer is going to work on a problem, they take ownership of it. They investigate it, document possible solutions, prototype, test, and benchmark where needed, and then decide on and implement the best solution based on what they found.</p>
+
+<h2>Define your project</h2>
+<p>Document the project's high-level details: who will benefit, what it is, where and when it is used, why people need it, and how they will discover and use it.</p>
+<h2>Define features throughout a project's life</h2>
+<p>You may want to define a few key features when you start a project, depending on the project and how much thought has gone into it. Keep early feature descriptions short and general.</p>
+<p>Add and update features throughout development: add a feature when a solution implements it for the first time, and update it when later solutions change it.</p>
+<h2>Declare and define the problem</h2>
+<p>Problems can come from anywhere: managers, admins, customer feedback, logs, analytics, developers, and more.</p>
+<p>Focus on understanding and defining the specific problem. When you can, describe it from the user's point of view, and never prescribe a solution.</p>
+<p>Good: As a user, I need a way to purchase service X.</p>
+<p>Bad: As a user, I need a product page where I can view details of and purchase service X.</p>
+<h2>Prioritize problems</h2>
+<p>The project owner prioritizes the problems in their project. Order the list by dragging, or with Alt+Arrow keys.</p>
+<p>Treat priority as a guide, not a restraint on developers. There may be technical reasons the project owner doesn't know about, or a developer may see two problems as related and want to solve them together even though their priorities are far apart. A developer who changes the order should tell the project owner.</p>
+<h2>A developer takes ownership of the problem</h2>
+<p>When a developer is ready to work on a problem, they take ownership of it.</p>
+<h2>The developer engineers solutions</h2>
+<p>The developer researches and documents possible solutions to the problem. Where it makes sense, each solution is prototyped and measured, with documentation showing the results.</p>
+<p>Based on what they measured, the developer decides on a final solution and implements it.</p>
+<h2>Resolve problems by publishing their story</h2>
+<p>When every applicable solution to a problem has been implemented, close the problem by publishing it as a story.</p>
+<p>A story brings together the problem, the solutions that were implemented to resolve it, and the solutions that were considered but dropped. Publishing deletes the problem and its solutions, and the story keeps the record.</p>
+<h2>Learn more</h2>
+<ul>
+<li><a href="/help/dashboard">Dashboard</a></li>
+<li><a href="/help/projects">Projects</a>, <a href="/help/features">Features</a>, <a href="/help/problems">Problems</a>, <a href="/help/solutions">Solutions</a>, <a href="/help/tasks">Tasks</a>, and <a href="/help/stories">Stories</a></li>
+<li><a href="/help/markdown">Writing in Markdown</a></li>
+</ul>
+		</div>
+		<webui-drawer slot="left" class="nav elevation-20" docked="true" data-state="slot|docked" data-moveable data-dockable>
+			<webui-flex justify="center" slot="header">
+				<webui-stoic-dreams-logo title="Task Story Logo" text="Task" text2="Story"></webui-stoic-dreams-logo>
+			</webui-flex>
+			<webui-nav routes="/nav.json" data-subscribe="app-nav-routes:setNavRoutes"></webui-nav>
+		</webui-drawer>
+		<webui-drawer slot="right" class="shared elevation-20" data-stopclick data-moveable data-state="slot">
+		</webui-drawer>
+		<header slot="header">
+			<button aria-label="open navigation menu" data-toggleclass=".nav|open" class="elevation-10 pa-1 mx-1">
+				<webui-icon icon="hamburger"></webui-icon>
+			</button>
+			<h1 data-subscribe="page-title:innerHTML">Help: Workflow</h1>
+			<h2 data-subscribe="page-subtitle:innerHTML"></h2>
+			<webui-flex grow></webui-flex>
+			<webui-feedback title="Provide us your feedback" data-post="https://api.myfi.ws/feedback/new" data-json-name="message">
+				<p>You can also come <a href="https://discord.gg/5X4YSDFdHD">chat with us on the Stoic Dreams discord server.</a></p>
+			</webui-feedback>
+			<webui-alerts title="View your notifications" data-title="My Alerts" data-toggleclass=".shared|open"></webui-alerts>
+			<webui-myfi-info sign-in-label="Sign In">
+				<template slot="panel-content">
+					<webui-flex column gap="2">
+						<webui-link href="/dashboard" icon="grid">My Dashboard</webui-link>
+						<webui-link href="/account" icon="users">Profile and Teams</webui-link>
+					</webui-flex>
+				</template>
+			</webui-myfi-info>
+		</header>
+		<noscript>Javascript is required to view this site</noscript>
+		<webui-page-footer copyright="2016" company="Stoic Dreams">
+			<webui-next-page theme="tertiary" data-subscribe="page-next-page"></webui-next-page>
+			<webui-flex class="my-3" justify="center" wrap>
+				<webui-link href="/about" icon="circle_exclamation|backing|bordered">About Task Story</webui-link>
+				<webui-link href="/contact" icon="messages|fill|shade:tri">Contact Stoic Dreams</webui-link>
+				<webui-link href="/privacy" icon="shield_exclamation|backing|bordered">Privacy</webui-link>
+				<webui-link href="/terms" icon="handshake|fill|shade:tri">Terms & Conditions</webui-link>
+			</webui-flex>
+			<webui-stoic-social-links class="mb-2"></webui-stoic-social-links>
+		</webui-page-footer>
+	</webui-app>
+</body>
+
+</html>

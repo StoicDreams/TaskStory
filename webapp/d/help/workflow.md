@@ -1,4 +1,4 @@
-<webui-data data-page-title="Help: Workflow" data-page-subtitle=""></webui-data>
+<webui-data data-page-title="Help: Workflow" data-page-subtitle="" data-page-description="The recommended team workflow in Task Story: define problems first, give each item one owner, and move work in short, finished iterations."></webui-data>
 <webui-data data-page-next-page='{"name": "Help: Dashboard", "href": "/help/dashboard"}'></webui-data>
 
 ## Recommended team workflow
