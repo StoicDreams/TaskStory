@@ -1,4 +1,4 @@
-import { test, expect, openPage } from './support/site.mjs';
+import { test, expect, openPage, pageReady } from './support/site.mjs';
 
 // The general-purpose components are mounted on a public help page, so these tests need no sign-in.
 async function mount(page, html) {
@@ -9,6 +9,8 @@ async function mount(page, html) {
         host.innerHTML = markup;
         document.querySelector('webui-app').appendChild(host);
     }, html);
+    // The components load their scripts once they are on the page, so wait for them before a test uses them.
+    await pageReady(page);
 }
 
 test.describe('app-tag-input', () => {
@@ -61,7 +63,9 @@ test.describe('app-markdown-editor', () => {
         await expect(preview.locator('webui-content')).toHaveCount(0);
         await expect(preview.locator('[onerror]')).toHaveCount(0);
         await expect(preview.locator('[data-trigger]')).toHaveCount(0);
-        expect(await page.evaluate(() => window.__hacked)).toBeUndefined();
+        // The image is kept without its handler, so wait for it to finish failing to load, which is when onerror would run.
+        await expect.poll(() => preview.locator('img').evaluate(img => img.complete)).toBe(true);
+        await expect.poll(() => page.evaluate(() => window.__hacked)).toBeUndefined();
     });
 
     test('switches between editor, both, and rendered views', async ({ page }) => {
@@ -102,9 +106,14 @@ test.describe('app-sortable-list', () => {
             const list = document.querySelector('app-sortable-list');
             window.__events = [];
             list.addEventListener('reorder', () => window.__events.push('reorder'));
+            list.addEventListener('select', () => window.__events.push('select'));
             list.items = [{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }];
         });
-        await page.locator('app-sortable-list').getByRole('button', { name: 'Beta' }).press('Alt+ArrowUp');
-        expect(await page.evaluate(() => window.__events)).toEqual([]);
+        const beta = page.locator('app-sortable-list').getByRole('button', { name: 'Beta' });
+        await beta.press('Alt+ArrowUp');
+        // Selecting comes after the key press, so once it is heard, the key press has been handled, and it reordered nothing.
+        await beta.click();
+        await expect.poll(() => page.evaluate(() => window.__events)).toEqual(['select']);
+        await expect(page.locator('app-sortable-list').getByRole('button')).toHaveText([/Alpha/, /Beta/]);
     });
 });

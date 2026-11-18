@@ -1,7 +1,7 @@
 import { test, expect, ROOT_FILES } from '../tests/support/site.mjs';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { addSampleData } from './sample-data.mjs';
+import { dashboardPicture, pictureReady, stillPicture } from './sample-data.mjs';
 
 // Captures the screenshots used on the public pages. Run it with PowerShell/screenshots.ps1 (Publish.ps1 does).
 // The app runs against the simulated API with sample data for one team, at a fixed date, so the images only change
@@ -17,9 +17,7 @@ async function open(page, route) {
 async function settle(page) {
     // Keep hover tooltips out of the pictures.
     await page.mouse.move(0, 0);
-    await page.evaluate(() => document.fonts.ready);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(400);
+    await pictureReady(page);
 }
 
 // Double resolution, so the text in the pictures stays sharp when a page shows them smaller than the app.
@@ -30,17 +28,10 @@ test('screenshots for the public pages', async ({ page }) => {
     mkdirSync(OUT, { recursive: true });
     await page.clock.setFixedTime(new Date('2026-11-02T15:00:00Z'));
     await page.setViewportSize({ width: 1280, height: 800 });
-    await test.step('add sample data', () => addSampleData(page));
-
+    // Adds the sample data too. The home page's own screenshot takes this picture again for itself (pages.setup.mjs),
+    // so it never depends on whether this file has been written yet.
     await test.step('dashboard', async () => {
-        const dashboard = page.locator('app-dashboard');
-        for (const name of ['Problems', 'Solutions', 'Tasks']) await dashboard.getByRole('button', { name, exact: true }).click();
-        await expect(dashboard.locator('app-item-manager')).toHaveCount(3);
-        await expect(dashboard.locator('app-item-manager[type="problem"] app-sortable-list').getByRole('button', { name: 'Checkout Timeouts' })).toBeVisible();
-        // Start at the manager toggles, so the picture shows the lists rather than the tag filter above them.
-        await dashboard.getByRole('button', { name: 'Tasks', exact: true }).evaluate(el => el.closest('webui-paper').scrollIntoView({ block: 'start' }));
-        await settle(page);
-        await page.screenshot({ path: join(OUT, 'dashboard.png') });
+        writeFileSync(join(OUT, 'dashboard.png'), await dashboardPicture(page));
     });
 
     await test.step('problem', async () => {
@@ -50,7 +41,7 @@ test('screenshots for the public pages', async ({ page }) => {
         await expect(manager).toContainText('Problem: Checkout Timeouts');
         await manager.locator('webui-switch').getByRole('radio', { name: 'Both' }).click();
         await settle(page);
-        await manager.screenshot({ path: join(OUT, 'problem.png') });
+        writeFileSync(join(OUT, 'problem.png'), await stillPicture(manager));
     });
 
     await test.step('solutions', async () => {
@@ -60,7 +51,7 @@ test('screenshots for the public pages', async ({ page }) => {
         await expect(manager.locator('app-sortable-list').getByRole('button')).toHaveCount(3);
         await expect(manager).toContainText('Solution: Cache Cart Totals');
         await settle(page);
-        await manager.screenshot({ path: join(OUT, 'solutions.png') });
+        writeFileSync(join(OUT, 'solutions.png'), await stillPicture(manager));
         await page.evaluate(() => window.taskStory.filter.set([]));
     });
 
@@ -68,15 +59,18 @@ test('screenshots for the public pages', async ({ page }) => {
         await open(page, '/problems');
         const manager = page.locator('app-item-manager');
         await manager.locator('app-sortable-list').getByRole('button', { name: 'Checkout Timeouts' }).click();
+        await expect(manager).toContainText('Problem: Checkout Timeouts');
+        // The dialog sizes its text boxes when it opens, so have the fonts in before it does.
+        await pictureReady(page);
         await manager.getByRole('button', { name: 'Publish' }).click();
         const publisher = page.locator('app-story-publisher');
         await expect(publisher).toContainText('Upgrade Payment SDK');
         await publisher.getByRole('button', { name: 'Upgrade Payment SDK: Implemented. Toggle' }).click();
         await publisher.getByRole('button', { name: 'Queue Tax Lookups: Implemented. Toggle' }).click();
         // Start at the solutions, where each is marked as implemented or dropped.
-        await publisher.getByRole('button', { name: 'Cache Cart Totals: Implemented. Toggle' }).evaluate(el => el.scrollIntoView({ block: 'start' }));
+        await publisher.getByRole('button', { name: 'Cache Cart Totals: Implemented. Toggle' }).evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
         await settle(page);
-        await page.screenshot({ path: join(OUT, 'publish.png') });
+        writeFileSync(join(OUT, 'publish.png'), await stillPicture(page));
         await page.keyboard.press('Escape');
     });
 
@@ -86,11 +80,11 @@ test('screenshots for the public pages', async ({ page }) => {
         await expect(manager).toContainText('Login Emails Arrive Late');
         await expect(manager).toContainText('Send From Background Job');
         await manager.scrollIntoViewIfNeeded();
-        await manager.evaluate(el => el.scrollIntoView({ block: 'start' }));
+        await manager.evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
         await settle(page);
         // A story is long, so keep its top: the title, tags, and the start of the problem.
         const box = await manager.boundingBox();
-        await page.screenshot({ path: join(OUT, 'story.png'), clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, 720) } });
+        writeFileSync(join(OUT, 'story.png'), await stillPicture(page, { clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, 720) } }));
     });
 
     await test.step('share image', async () => {

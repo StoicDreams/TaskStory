@@ -91,3 +91,82 @@ export async function addSampleData(page) {
     }, sample);
     await expect(page.locator('app-workspace')).toContainText('Signed in as Alex · Team: Acme Web');
 }
+
+/**
+ * Waits for everything that changes a picture: fonts, icons, images, and fades. Nothing here waits for an amount of time.
+ * The same steps as pictureReady in pages.shots.mjs, which does not export it. site.shots.mjs and pages.setup.mjs use this one.
+ */
+export async function pictureReady(page) {
+    await page.evaluate(async () => {
+        const all = (root, found = []) => {
+            for (const el of root.querySelectorAll('*')) {
+                found.push(el);
+                if (el.shadowRoot) all(el.shadowRoot, found);
+            }
+            return found;
+        };
+        const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+        const elements = all(document);
+        await document.fonts.ready;
+        // Icons draw themselves once their definition has downloaded. This asks for the same cached download each
+        // icon is waiting on, so when it answers, and a frame has passed, every icon has been given its drawing.
+        const icons = new Set(elements.filter(el => el.localName === 'webui-icon' && el._iconRequest).map(el => el._iconRequest));
+        await Promise.all([...icons].map(name => webui.fetchWithCache(`${webui.cdnRoot}icons/${name}.webui`).catch(() => { })));
+        // An image that is out of view and loads lazily has not started, and will not until it is scrolled to.
+        const images = elements.filter(el => el.localName === 'img' && el.currentSrc && !(el.loading === 'lazy' && !el.complete));
+        await Promise.all(images.map(img => img.complete ? null : new Promise(resolve => {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+        })));
+        // A broken image rejects decode, and still shows the same every time.
+        await Promise.all(images.map(img => img.decode().catch(() => { })));
+        // Transitions start when the browser next works out styles, so let two frames pass before looking for them.
+        await frame();
+        await frame();
+        // Fades, icon morphs, and other transitions that end. A looping animation never finishes, so it is left running.
+        // document.getAnimations leaves out shadow roots, where the components keep theirs, so each root is asked.
+        const roots = () => [document, ...all(document).map(el => el.shadowRoot).filter(Boolean)];
+        const ending = () => roots().flatMap(root => root.getAnimations()).filter(animation => animation.playState === 'running'
+            && Number.isFinite(animation.effect?.getComputedTiming().endTime));
+        for (let running = ending(); running.length; running = ending()) {
+            await Promise.all(running.map(animation => animation.finished.catch(() => { })));
+        }
+        await document.fonts.ready;
+        // Two frames, so the browser has painted the finished page before the picture is taken.
+        await frame();
+        await frame();
+    });
+}
+
+/**
+ * A picture of a page or an element once it has stopped changing: it is taken again until two in a row are the same.
+ * The browser redraws text more sharply a few frames after a fade ends, and nothing says when it has, so this is how
+ * the picture comes out the same on every run without waiting for an amount of time.
+ */
+export async function stillPicture(target, options = {}) {
+    let last = await target.screenshot(options);
+    for (let tries = 0; tries < 30; tries++) {
+        const next = await target.screenshot(options);
+        if (next.equals(last)) return next;
+        last = next;
+    }
+    throw new Error('The picture never stopped changing, so something on the page is still moving.');
+}
+
+/**
+ * Adds the sample data and returns a picture of the dashboard with its Problems, Solutions, and Tasks lists open.
+ * The home page shows this picture, so both site.shots.mjs (which saves it) and the home page's screenshot take it here.
+ */
+export async function dashboardPicture(page) {
+    await addSampleData(page);
+    const dashboard = page.locator('app-dashboard');
+    for (const name of ['Problems', 'Solutions', 'Tasks']) await dashboard.getByRole('button', { name, exact: true }).click();
+    await expect(dashboard.locator('app-item-manager')).toHaveCount(3);
+    await expect(dashboard.locator('app-item-manager[type="problem"] app-sortable-list').getByRole('button', { name: 'Checkout Timeouts' })).toBeVisible();
+    // Start at the manager toggles, so the picture shows the lists rather than the tag filter above them.
+    await dashboard.getByRole('button', { name: 'Tasks', exact: true }).evaluate(el => el.closest('webui-paper').scrollIntoView({ block: 'start', behavior: 'instant' }));
+    // Keep hover tooltips out of the picture.
+    await page.mouse.move(0, 0);
+    await pictureReady(page);
+    return stillPicture(page);
+}

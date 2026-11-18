@@ -6,15 +6,9 @@ import {
     WEBAPP, ROOT_FILES, readJson, readText, siteOrigin, pageFiles, routeToFile, navRoutes, sitemapUrls,
     pageRoutes, screenshotRoutes, pageScreenshotFile, pageRoles, signIn, expectSignedIn, isDynamicRoute, resolveSiteFile, relativeToSite, themeVariables, themeContrastProblems, normalizeThemeValue,
 } from './support/site.mjs';
-import config from './site.config.mjs';
 
 // These checks are the same in every site, so change them in every site at once.
 // Put this site's own settings in site.config.mjs, and checks for its own pages and components in other spec files.
-
-test.beforeEach(({ }, testInfo) => {
-    const reason = config.knownBugs?.[testInfo.title];
-    if (reason) test.fail(true, reason);
-});
 
 function routeExists(route) {
     const path = route.replace(/[?#].*$/, '');
@@ -115,10 +109,9 @@ test.describe('pages', () => {
             await signIn(page, roles);
             await openPage(page, route);
             await expectSignedIn(page, roles);
-            const hidden = await page.evaluate(() => [...document.querySelectorAll('webui-restrict-to-role')]
+            await expect.poll(() => page.evaluate(() => [...document.querySelectorAll('webui-restrict-to-role')]
                 .filter(el => el.getAttribute('role') !== '0' && el._showing !== 'content')
-                .map(el => `role="${el.getAttribute('role')}"`));
-            expect(hidden, 'The test user from pageRoles should see every restricted section').toEqual([]);
+                .map(el => `role="${el.getAttribute('role')}"`)), { message: 'The test user from pageRoles should see every restricted section' }).toEqual([]);
         });
     }
 
@@ -126,11 +119,10 @@ test.describe('pages', () => {
         test(`${route} loads`, async ({ page }) => {
             await openPage(page, route);
             await expect(page.locator('webui-page-not-found')).toHaveCount(0);
-            const title = await page.evaluate(() => webui.getData('page-title'));
-            expect(title, 'The page should set a title').toBeTruthy();
-            expect(title).not.toBe('Page Not Found');
-            // Pages such as a component list load dozens of scripts on demand, which takes a while on a slow or busy machine.
-            await expect.poll(() => undefinedComponents(page), { message: 'These components never loaded', timeout: 15000 }).toEqual([]);
+            const title = () => page.evaluate(() => webui.getData('page-title'));
+            await expect.poll(title, { message: 'The page should set a title' }).toBeTruthy();
+            await expect.poll(title).not.toBe('Page Not Found');
+            await expect.poll(() => undefinedComponents(page), { message: 'These components never loaded' }).toEqual([]);
         });
     }
 });

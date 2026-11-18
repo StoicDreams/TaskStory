@@ -317,18 +317,65 @@ export const test = base.extend({
 export { expect };
 
 /**
- * Open a page of the site and wait until its content has loaded.
- * Pages fade in, so this waits for the transition to finish as well.
+ * Open a page of the site and wait until it is ready: the loader has put the page's content in place and finished
+ * its fade, every component on the page is defined, and the content in view has loaded.
  */
 export async function openPage(page, route) {
     await page.goto(route);
-    await page.waitForFunction(() => typeof webui === 'object' && webui.loaded && webui.appConfig?.appName);
+    await pageReady(page);
+}
+
+/**
+ * Waits for a page the loader is loading, or has loaded, to be ready. openPage calls it, and a test that goes to
+ * another page by a link or webui.navigateTo calls it after waiting for the new address.
+ */
+export async function pageReady(page) {
+    // The loader sets the page title in the same step that puts the content in place (or shows the not-found page),
+    // and takes the transition class off once the fade is over. Before that the app shell has neither.
     await page.waitForFunction(() => {
+        if (typeof webui !== 'object' || !webui.loaded || !webui.appConfig?.appName) return false;
         const app = document.querySelector('webui-app');
-        return webui.getData('page-path') && app?.main && !app.main.classList.contains('transition');
+        if (!app?.main || app.main.classList.contains('transition')) return false;
+        return !!webui.getData('page-title') || !!document.querySelector('webui-page-not-found');
     });
-    // Pages can pull in more content, such as webui-content, and components load their scripts on demand.
-    await page.waitForLoadState('networkidle');
+    // Components load their scripts on demand, and loaded content can bring more components, so this checks again
+    // until nothing is left. Pages such as a component list load dozens of scripts, which takes a while on a slow or busy machine.
+    await expect.poll(() => unfinishedLoading(page), { message: 'The page never finished loading these', timeout: 15000 }).toEqual([]);
+}
+
+/**
+ * What a page is still loading: components without a definition, and webui-content in view that has not shown its
+ * source yet. Content out of view is left out, because it only loads once it is scrolled to.
+ */
+export async function unfinishedLoading(page) {
+    return page.evaluate(async () => {
+        const all = (root, found = []) => {
+            for (const el of root.querySelectorAll('*')) {
+                found.push(el);
+                if (el.shadowRoot) all(el.shadowRoot, found);
+            }
+            return found;
+        };
+        const elements = all(document);
+        const tags = new Set(elements.map(el => el.localName).filter(name => /^(webui|app)-/.test(name)));
+        const waiting = [...tags].filter(tag => !customElements.get(tag)).sort();
+        if (waiting.length) return waiting;
+        const contents = elements.filter(el => el.localName === 'webui-content');
+        if (!contents.length) return [];
+        // The loader marks content as visible from its own IntersectionObserver. Observers report in the order they
+        // were made, so once this one has reported, the loader's has already marked everything now in view.
+        await new Promise(resolve => {
+            const observer = new IntersectionObserver(() => {
+                observer.disconnect();
+                resolve();
+            });
+            contents.forEach(el => observer.observe(el));
+        });
+        return contents
+            .filter(el => el.isConnected && el.hasAttribute('visible') && !el.classList.contains('loaded'))
+            .filter(el => el.getAttribute('src') && el.getAttribute('src') !== 'html')
+            .map(el => `webui-content src="${el.getAttribute('src')}"`);
+    });
 }
 
 /** Custom element tags on the page that never loaded a definition. */

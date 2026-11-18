@@ -69,7 +69,7 @@ test.describe('marketing pages', () => {
         await page.getByRole('link', { name: 'Organize with tags, not hierarchies' }).click();
         await expect(page).toHaveURL(/\/continuous-agile-software-engineering#tags$/);
         await expect(page.locator('#tags')).toBeInViewport();
-        expect(await page.evaluate(() => window.__sameDocument)).toBe(true);
+        await expect.poll(() => page.evaluate(() => window.__sameDocument)).toBe(true);
     });
 
     test('the old /agile-project-management address redirects to the CASE guide', () => {

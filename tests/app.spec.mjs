@@ -85,7 +85,7 @@ test.describe('app-item-manager', () => {
         const filterBtn = manager.getByRole('button', { name: 'Filter by problem:homecontent' });
         await filterBtn.click();
         await expect(manager.getByRole('button', { name: 'Stop filtering by problem:homecontent' })).toHaveAttribute('aria-pressed', 'true');
-        expect(await page.evaluate(() => window.taskStory.filter.get())).toEqual(['problem:homecontent']);
+        await expect.poll(() => page.evaluate(() => window.taskStory.filter.get())).toEqual(['problem:homecontent']);
         await manager.getByRole('button', { name: 'Stop filtering by problem:homecontent' }).click();
         await expect(manager.locator('app-sortable-list').getByRole('button', { name: 'Home Content' })).toBeVisible();
         await expect(manager.locator('app-tag-input')).toContainText('person:erik');
@@ -221,7 +221,7 @@ test.describe('app-tag-filter', () => {
         await expect(list.getByRole('button', { name: 'One' })).toBeVisible();
         await filter.getByRole('button', { name: 'project:beta' }).click();
         await expect(list.getByRole('button', { name: 'Two' })).toBeVisible();
-        expect(await page.evaluate(() => window.taskStory.filter.get())).toEqual(['project:beta']);
+        await expect.poll(() => page.evaluate(() => window.taskStory.filter.get())).toEqual(['project:beta']);
         await filter.getByRole('button', { name: 'Bug', exact: true }).click();
         await expect(filter.getByRole('button', { name: 'Bug', exact: true })).toHaveAttribute('aria-pressed', 'true');
         await expect(list.getByRole('button')).toHaveCount(0);
@@ -283,14 +283,15 @@ test.describe('app-story-publisher', () => {
         await expect(publisher).toContainText('Rewrite Hero');
         await publisher.getByRole('button', { name: 'Rewrite Hero: Implemented. Toggle' }).click();
         await expect(publisher.getByRole('button', { name: 'Rewrite Hero: Dropped. Toggle' })).toBeVisible();
-        expect(await page.evaluate(() => document.querySelector('app-story-publisher').publish())).toBe(true);
+        // publish() saves the story, and resolves once it has, so it is called once and awaited.
+        await expect(page.evaluate(() => document.querySelector('app-story-publisher').publish())).resolves.toBe(true);
         const stories = await api(page, 'POST', 'items/query', { type: 'story', tags: [] });
         expect(stories).toHaveLength(1);
         expect(stories[0].integratedSolutions).toContain('Add Content');
         expect(stories[0].droppedSolutions).toContain('Rewrite Hero');
         expect(stories[0].tags).toEqual(expect.arrayContaining(['problem:homecontent', 'solution:addcontent', 'solution:rewritehero']));
-        expect(await api(page, 'POST', 'items/query', { type: 'problem', tags: [] })).toEqual([]);
-        expect(await api(page, 'POST', 'items/query', { type: 'solution', tags: [] })).toEqual([]);
+        await expect.poll(() => api(page, 'POST', 'items/query', { type: 'problem', tags: [] })).toEqual([]);
+        await expect.poll(() => api(page, 'POST', 'items/query', { type: 'solution', tags: [] })).toEqual([]);
         expect(keep.id).toBeTruthy();
     });
 });
