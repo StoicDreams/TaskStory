@@ -265,7 +265,7 @@ async function downloadLiveCdn(url) {
     }
 }
 
-async function serveLiveCdn(route, headers) {
+export async function serveLiveCdn(route, headers = {}) {
     const request = route.request();
     if (request.method() !== 'GET') return route.continue();
     const url = `${LIVE_CDN_ORIGIN}${new URL(request.url()).pathname}`;
