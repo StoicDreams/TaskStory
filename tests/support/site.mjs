@@ -237,8 +237,8 @@ export function relativeToSite(file) {
     return relative(SITE_ROOT, file).split(sep).join('/');
 }
 
-// The live-cdn project gets each framework file from cdn.myfi.ws once per test worker and keeps it, instead of once per
-// test. Thousands of requests per run meant a dropped connection (such as net::ERR_NETWORK_CHANGED) now and then,
+// The live-cdn project serves the framework files live-cdn.setup.mjs downloaded once for the run. Any other file from
+// cdn.myfi.ws is downloaded once per test worker and kept, instead of once per test. Thousands of requests per run meant a dropped connection (such as net::ERR_NETWORK_CHANGED) now and then,
 // which failed whichever test it hit. A failed download is retried, and if it never succeeds the browser asks itself.
 const liveCdn = new Map();
 const LIVE_CDN_ORIGIN = 'https://cdn.myfi.ws';
@@ -265,10 +265,27 @@ async function downloadLiveCdn(url) {
     }
 }
 
+// The files live-cdn.setup.mjs downloaded for this run before the workers started, as { path: { status, contentType } }.
+let liveCdnCache;
+function cachedLiveCdn(pathname) {
+    const dir = process.env.LIVE_CDN_CACHE;
+    if (!dir) return null;
+    if (liveCdnCache === undefined) {
+        try { liveCdnCache = JSON.parse(readFileSync(join(dir, 'index.json'), 'utf8')); } catch { liveCdnCache = null; }
+    }
+    const path = decodeURIComponent(pathname).replace(/^\/+/, '');
+    const entry = liveCdnCache?.[path];
+    if (!entry) return null;
+    try { return { ...entry, body: readFileSync(join(dir, path)) }; } catch { return null; }
+}
+
 export async function serveLiveCdn(route, headers = {}) {
     const request = route.request();
     if (request.method() !== 'GET') return route.continue();
-    const url = `${LIVE_CDN_ORIGIN}${new URL(request.url()).pathname}`;
+    const pathname = new URL(request.url()).pathname;
+    const cached = cachedLiveCdn(pathname);
+    if (cached) return route.fulfill({ headers, status: cached.status, contentType: cached.contentType, body: cached.body });
+    const url = `${LIVE_CDN_ORIGIN}${pathname}`;
     if (!liveCdn.has(url)) liveCdn.set(url, downloadLiveCdn(url));
     const file = await liveCdn.get(url);
     if (!file) {

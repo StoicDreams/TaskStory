@@ -20,7 +20,7 @@ test.afterAll(() => temps.forEach(dir => rmSync(dir, { recursive: true, force: t
 
 // Programs these tests start get the same environment wherever the tests run: the run's own settings, such as CI's
 // and Publish's, are left out, so a script never behaves differently on CI, in a full run, or beside other specs.
-const RUN_SETTINGS = ['CI', 'GITHUB_ACTIONS', 'PW_NO_CACHE', 'PW_WORKERS', 'PW_NICE', 'PW_TEST_CACHE_ROOT', 'WEBUI_CDN_ROOT', 'TASKPROXY_CDN'];
+const RUN_SETTINGS = ['CI', 'GITHUB_ACTIONS', 'PW_NO_CACHE', 'PW_WORKERS', 'PW_NICE', 'PW_TEST_CACHE_ROOT', 'LIVE_CDN_CACHE', 'WEBUI_CDN_ROOT', 'TASKPROXY_CDN'];
 function programEnv(env = {}) {
     const clean = { ...process.env };
     for (const key of Object.keys(clean)) if (RUN_SETTINGS.includes(key.toUpperCase())) delete clean[key];

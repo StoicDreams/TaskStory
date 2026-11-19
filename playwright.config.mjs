@@ -26,6 +26,8 @@ export default defineConfig({
     testDir: './tests',
     testMatch: '**/*.spec.mjs',
     fullyParallel: true,
+    // Downloads the framework from the live CDN once, before the workers start (see tests/support/live-cdn.setup.mjs).
+    globalSetup: './tests/support/live-cdn.setup.mjs',
     workers,
     forbidOnly: !!process.env.CI,
     reporter: [['list'], ['html', { open: 'never' }]],
