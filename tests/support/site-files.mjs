@@ -20,6 +20,7 @@ export const MIME = {
     '.html': 'text/html', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
     '.webp': 'image/webp', '.avif': 'image/avif', '.ico': 'image/x-icon', '.gif': 'image/gif', '.wasm': 'application/wasm',
     '.md': 'text/plain', '.txt': 'text/plain', '.xml': 'application/xml', '.webmanifest': 'application/manifest+json',
+    '.woff2': 'font/woff2',
 };
 
 export function readText(file) {
@@ -229,7 +230,8 @@ export function themeVariables(css) {
 export function normalizeThemeValue(value) {
     const color = colorToRgb(value.trim());
     if (color) return `rgba(${color.rgb.join(',')},${+color.alpha.toFixed(3)})`;
-    return value.replace(/\s+/g, '').toLowerCase();
+    // Minifiers shorten numbers (0.01em becomes .01em, 1.50 becomes 1.5), so numbers compare by value.
+    return value.replace(/(?<![\w#.])(\d*\.\d+|\d+)/g, n => String(+n)).replace(/\s+/g, '').toLowerCase();
 }
 
 function colorToRgb(value) {
