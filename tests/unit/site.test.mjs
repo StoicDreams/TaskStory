@@ -1,15 +1,16 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, relative, sep } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { test, expect } from 'vitest';
 import {
-    test, expect, openPage, undefinedComponents,
     WEBAPP, ROOT_FILES, readJson, readText, siteOrigin, pageFiles, routeToFile, navRoutes, sitemapUrls,
-    pageRoutes, screenshotRoutes, pageScreenshotFile, pageRoles, signIn, expectSignedIn, isDynamicRoute, resolveSiteFile, relativeToSite,
+    screenshotRoutes, pageScreenshotFile, isDynamicRoute, resolveSiteFile, relativeToSite,
     PRERENDERED, prerenderedFile, sourceVersion, fileToRoute, themeVariables, themeContrastProblems, normalizeThemeValue,
-} from './support/site.mjs';
+} from '../support/site-files.mjs';
 
-// These checks are the same in every site, so change them in every site at once.
-// Put this site's own settings in site.config.mjs, and checks for its own pages and components in other spec files.
+// The site's files, checked in Node: its config, links, sitemap, prerendered pages, theme, and tests for every component.
+// Its pages are opened in tests/browser/site.spec.mjs. Both files are the same in every site: change them all at once.
+// Put this site's own settings in tests/site.config.mjs, and tests for its own pages and components in files of their own.
 
 function routeExists(route) {
     const path = route.replace(/[?#].*$/, '');
@@ -85,14 +86,15 @@ test.describe('site files', () => {
     });
 
     test('every site component is named in a spec file', () => {
-        // A component counts as tested when a spec other than this one names its tag, such as app-search.
+        // A component counts as tested when a test file of either tier, other than the shared ones, names its tag.
         const wc = join(WEBAPP, 'wc');
         const components = existsSync(wc) ? readdirSync(wc).filter(name => name.endsWith('.js') && !name.endsWith('.min.js')).map(name => name.replace(/\.js$/, '')) : [];
-        const testsDir = dirname(fileURLToPath(import.meta.url));
-        const specs = readdirSync(testsDir).filter(name => name.endsWith('.spec.mjs') && name !== 'site.spec.mjs')
-            .map(name => readText(join(testsDir, name))).join('\n');
-        const missing = components.filter(name => !specs.includes(`app-${name}`));
-        expect(missing, 'Add tests for these components in a spec file of their own').toEqual([]);
+        const dir = folder => fileURLToPath(new URL(folder, import.meta.url));
+        const files = [[dir('./'), '.test.mjs'], [dir('../browser/'), '.spec.mjs']].flatMap(([folder, ending]) => existsSync(folder)
+            ? readdirSync(folder).filter(name => name.endsWith(ending) && !name.startsWith('site.')).map(name => readText(join(folder, name)))
+            : []).join('\n');
+        const missing = components.filter(name => !files.includes(`app-${name}`));
+        expect(missing, 'Add tests for these components in a test file of their own').toEqual([]);
     });
 });
 
@@ -168,36 +170,8 @@ test.describe('prerendered pages', () => {
     });
 });
 
-test.describe('pages', () => {
-    test('every page in nav.json has a screenshot from screenshots/pages.shots.mjs', () => {
-        // PowerShell/screenshots.ps1 takes them, and Publish.ps1 runs it before the tests.
-        const missing = screenshotRoutes().filter(route => !existsSync(pageScreenshotFile(route)));
-        expect(missing, 'Run PowerShell/screenshots.ps1 to capture these pages').toEqual([]);
-    });
-
-    // The screenshots sign in with these roles, so they must be enough to show the page's content.
-    for (const route of screenshotRoutes().filter(route => pageRoles(route) !== 0)) {
-        test(`${route} shows its content to the screenshot user`, async ({ page }) => {
-            const roles = pageRoles(route);
-            await signIn(page, roles);
-            await openPage(page, route);
-            await expectSignedIn(page, roles);
-            await expect.poll(() => page.evaluate(() => [...document.querySelectorAll('webui-restrict-to-role')]
-                .filter(el => el.getAttribute('role') !== '0' && el._showing !== 'content')
-                .map(el => `role="${el.getAttribute('role')}"`)), { message: 'The test user from pageRoles should see every restricted section' }).toEqual([]);
-        });
-    }
-
-    for (const route of pageRoutes()) {
-        test(`${route} loads`, async ({ page }) => {
-            await openPage(page, route);
-            await expect(page.locator('webui-page-not-found')).toHaveCount(0);
-            const title = () => page.evaluate(() => webui.getData('page-title'));
-            await expect.poll(title, { message: 'The page should set a title' }).toBeTruthy();
-            await expect.poll(title).not.toBe('Page Not Found');
-            await expect.poll(() => undefinedComponents(page), { message: 'These components never loaded' }).toEqual([]);
-            // The app's own rendering replaces the prerendered text, so it never shows twice.
-            await expect(page.locator('[data-prerendered]')).toHaveCount(0);
-        });
-    }
+test('every page in nav.json has a screenshot from screenshots/pages.shots.mjs', () => {
+    // PowerShell/screenshots.ps1 takes them, and Publish.ps1 runs it before the tests.
+    const missing = screenshotRoutes().filter(route => !existsSync(pageScreenshotFile(route)));
+    expect(missing, 'Run PowerShell/screenshots.ps1 to capture these pages').toEqual([]);
 });

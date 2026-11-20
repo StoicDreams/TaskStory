@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 // network for them. When each worker downloaded them itself, a busy machine made those downloads stall past their
 // time limit, and tests failed waiting for the loader or a component. Files not listed here, such as the shared pages
 // in d/, are still downloaded by a worker the first time a page asks for them.
-// This file is the same in every site and in Task Proxy. playwright.config.mjs runs it as globalSetup.
+// This file is the same in every site. playwright.config.mjs and vitest.config.mjs run it as globalSetup.
 
 const LIVE_CDN_ORIGIN = 'https://cdn.myfi.ws';
 export const LIVE_CDN_CACHE = fileURLToPath(new URL('../../node_modules/.cache/live-cdn', import.meta.url));
@@ -37,9 +37,11 @@ function save(path, file) {
 }
 
 export default async function globalSetup() {
-    // The local-cdn project serves the framework from a MyFiCDN checkout, so it needs nothing from the live CDN.
+    // The local-cdn project, and the unit tests' local-cdn mode (WEBUI_CDN_ROOT), serve the framework from a MyFiCDN
+    // checkout, so they need nothing from the live CDN.
     const args = process.argv.join(' ');
     if (/--project[= ]local-cdn\b/.test(args) && !/--project[= ](?!local-cdn\b)/.test(args)) return;
+    if (process.env.WEBUI_CDN_ROOT) return;
     rmSync(LIVE_CDN_CACHE, { recursive: true, force: true });
     const index = {};
     const lists = {};
