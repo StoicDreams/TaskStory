@@ -8,7 +8,9 @@
 	<!-- Google tag (gtag.js) -->
 	<script async src="https://www.googletagmanager.com/gtag/js?id=G-QX5XYHV99J"></script>
 	<script>
-		if (location.hostname !== 'localhost') {
+		// Pages opened on this machine or another device on the home network load Web UI from the local MyFiCDN server and skip analytics.
+		window.webuiLocal = /^(localhost|127\.0\.0\.1|\[::1\]|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2}|[\w-]+\.local)$/.test(location.hostname);
+		if (!webuiLocal) {
 			window.dataLayer = window.dataLayer || [];
 			function gtag() { dataLayer.push(arguments); }
 			gtag('js', new Date());
@@ -21,7 +23,7 @@
 	<meta name="robots" content="index, follow">
 	<base href="/" />
 	<script type="text/javascript">
-		navigator.serviceWorker.register('service-worker.min.js');
+		navigator.serviceWorker?.register('service-worker.min.js');
 	</script>
 
 	<link rel="dns-prefetch" href="https://cdn.myfi.ws" />
@@ -29,13 +31,14 @@
 	<link rel="preconnect" href="https://cdn.myfi.ws">
 	<link rel="preconnect" href="https://api.myfi.ws">
 
-	<link href="Logo.svg?v=b9dbb8035f" rel="icon" type="image/svg+xml" sizes="any" />
+	<link href="Logo.svg?v=449e076673" rel="icon" type="image/svg+xml" sizes="any" />
 	<link rel="manifest" href="app.webmanifest?v=bcbb931b5e">
 
 	<script>
-		// Web UI loads from the local MyFiCDN server (MyFiCDN/PowerShell/RunLocal.ps1) when the site runs on localhost,
+		// Web UI loads from the local MyFiCDN server (MyFiCDN/PowerShell/RunLocal.ps1) when the site runs locally (through /webui-cdn/ on
+		// another device, which RunLocal.ps1 -Network passes on to it),
 		// so framework changes show before they are published, and from cdn.myfi.ws everywhere else.
-		window.webuiCdn = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) ? 'http://localhost:3180/' : 'https://cdn.myfi.ws/';
+		window.webuiCdn = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) ? 'http://localhost:3180/' : webuiLocal ? '/webui-cdn/' : 'https://cdn.myfi.ws/';
 		document.write('<link href="' + webuiCdn + 'css/webui.min.css" rel="stylesheet" />');
 	</script>
 	<link href="css/app.min.css?v=d5706ae157" rel="stylesheet" />
@@ -84,7 +87,7 @@
 	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/page-footer.min.js" crossorigin="anonymous" />
 	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/stoic-dreams-logo.min.js" crossorigin="anonymous" />
 	<link rel="preload" as="script" href="https://cdn.myfi.ws/webui/stoic-social-links.min.js" crossorigin="anonymous" />
-	<meta name="webui-prerender" content="dfa83c2eda">
+	<meta name="webui-prerender" content="c57bb0462e">
 </head>
 
 <body>
