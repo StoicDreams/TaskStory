@@ -38,11 +38,18 @@ export function inside(root, pathname) {
 }
 
 // Trunk copies root_files/ and pkg/ to the site root, and worker.js from src-js/.
-export function resolveSiteFile(pathname) {
+function siteFile(pathname) {
     return inside(ROOT_FILES, pathname)
         || inside(WEBAPP, pathname)
         || inside(join(WEBAPP, 'pkg'), pathname)
         || inside(join(WEBAPP, 'src-js'), pathname);
+}
+
+/** The site's file for an address. A folder of its own, such as /remote/, is served its index.html, as IIS does. */
+export function resolveSiteFile(pathname) {
+    const folder = pathname.replace(/\/+$/, '');
+    if (folder === '') return siteFile(pathname);
+    return siteFile(pathname) || siteFile(`${folder}/index.html`);
 }
 
 // Trunk rewrites its data-trunk links at build time. Do the parts the browser needs, so site CSS still applies.

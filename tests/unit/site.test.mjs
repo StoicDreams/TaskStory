@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from 'vitest';
 import {
     WEBAPP, ROOT_FILES, readJson, readText, siteOrigin, pageFiles, routeToFile, navRoutes, sitemapUrls,
-    screenshotRoutes, pageScreenshotFile, isDynamicRoute, resolveSiteFile, relativeToSite,
+    screenshotRoutes, pageRoutes, pageScreenshotFile, isDynamicRoute, resolveSiteFile, relativeToSite,
     PRERENDERED, prerenderedFile, sourceVersion, fileToRoute, themeVariables, themeContrastProblems, normalizeThemeValue,
 } from '../support/site-files.mjs';
 
@@ -63,6 +63,27 @@ test.describe('site files', () => {
             }
         }
         expect(broken).toEqual([]);
+    });
+
+    test('a folder with its own index.html is served that file, and is not one of the app\'s pages', () => {
+        const folders = [];
+        const walk = dir => {
+            for (const name of readdirSync(dir)) {
+                const path = join(dir, name);
+                if (!statSync(path).isDirectory()) continue;
+                if (existsSync(join(path, 'index.html'))) folders.push(path);
+                walk(path);
+            }
+        };
+        walk(ROOT_FILES);
+        for (const folder of folders) {
+            const route = `/${relative(ROOT_FILES, folder).split(sep).join('/')}`;
+            for (const address of [route, `${route}/`]) {
+                expect(resolveSiteFile(address), address).toBe(join(folder, 'index.html'));
+                expect(pageRoutes(), address).not.toContain(address);
+            }
+        }
+        expect(resolveSiteFile('/'), 'the home page is the app, not a file').toBeNull();
     });
 
     test('theme colors are readable with their text colors', () => {
